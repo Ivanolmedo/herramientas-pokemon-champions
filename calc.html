@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Daños · Pokémon Champions</title>
+  <meta name="description" content="Calculadora de daños amigable para Pokémon Champions. Más clara y fácil de usar que la de Smogon." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            nunito: ['Nunito', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-amber-50/60 text-slate-800 font-quicksand antialiased min-h-screen">
+
+  <!-- Header / Nav (igual en todas las páginas) -->
+  <header class="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <a href="index.html" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-lg group-hover:bg-white/30 transition">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div>
+          <h1 class="font-nunito font-extrabold text-lg leading-tight">Herramientas</h1>
+          <p class="text-orange-100 text-xs -mt-0.5">Pokémon Champions</p>
+        </div>
+      </a>
+
+      <nav class="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-full p-1">
+        <a href="index.html" class="nav-link px-4 py-1.5 rounded-full text-sm font-semibold transition hover:bg-white/20">
+          <i class="fa-solid fa-house mr-1.5"></i>Inicio
+        </a>
+        <a href="calc.html" class="nav-link active px-4 py-1.5 rounded-full text-sm font-semibold transition">
+          <i class="fa-solid fa-calculator mr-1.5"></i>Calculadora
+        </a>
+        <a href="teambuilder.html" class="nav-link px-4 py-1.5 rounded-full text-sm font-semibold transition hover:bg-white/20">
+          <i class="fa-solid fa-users mr-1.5"></i>Teambuilder
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- Título de la página -->
+    <div class="mb-6">
+      <h2 class="font-nunito font-extrabold text-2xl sm:text-3xl text-slate-800">
+        Calculadora de Daños
+      </h2>
+      <p class="text-slate-600 text-sm mt-1">
+        Versión más clara y amigable · Modo <span class="font-semibold text-orange-600">Champions</span>
+      </p>
+    </div>
+
+    <!-- Resultados principales (zona en inglés por ahora) -->
+    <section id="results-panel" class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <h3 class="font-nunito font-bold text-lg text-slate-700">
+          <i class="fa-solid fa-chart-simple text-orange-500 mr-2"></i>
+          Damage Results
+        </h3>
+        <div class="flex gap-2">
+          <button id="btn-copy-result" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full transition">
+            <i class="fa-regular fa-copy mr-1"></i> Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Aquí irán los rangos de daño -->
+      <div id="damage-output" class="space-y-3">
+        <div class="text-center text-slate-400 py-8">
+          <i class="fa-solid fa-arrow-down text-2xl mb-2"></i>
+          <p>Select Pokémon and moves below to see damage calculations</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Grid principal: Attacker | Field | Defender -->
+    <div class="grid lg:grid-cols-3 gap-5">
+
+      <!-- ===== POKÉMON 1 (Attacker) ===== -->
+      <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
+        <div class="bg-orange-50 px-5 py-3 border-b border-orange-100 flex items-center justify-between">
+          <h3 class="font-nunito font-bold text-orange-800">
+            <i class="fa-solid fa-sword mr-2"></i>Attacker
+          </h3>
+          <span class="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full font-medium">Pokémon 1</span>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <!-- Species -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Species</label>
+            <input type="text" id="p1-species" placeholder="e.g. Flutter Mane" 
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" />
+          </div>
+
+          <!-- Level + Tera -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Level</label>
+              <input type="number" id="p1-level" value="50" min="1" max="100"
+                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Tera Type</label>
+              <select id="p1-tera" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+                <option value="">None</option>
+                <option>Stellar</option>
+                <option>Fire</option>
+                <option>Water</option>
+                <option>Grass</option>
+                <option>Electric</option>
+                <option>Ice</option>
+                <option>Fighting</option>
+                <option>Poison</option>
+                <option>Ground</option>
+                <option>Flying</option>
+                <option>Psychic</option>
+                <option>Bug</option>
+                <option>Rock</option>
+                <option>Ghost</option>
+                <option>Dragon</option>
+                <option>Dark</option>
+                <option>Steel</option>
+                <option>Fairy</option>
+                <option>Normal</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Nature / Ability / Item -->
+          <div class="grid grid-cols-1 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature</label>
+              <select id="p1-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+                <option>Adamant</option>
+                <option>Modest</option>
+                <option>Jolly</option>
+                <option>Timid</option>
+                <option>Bold</option>
+                <option>Calm</option>
+                <option selected>Serious</option>
+                <!-- Se completarán después -->
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Ability</label>
+              <input type="text" id="p1-ability" placeholder="e.g. Protosynthesis"
+                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Item</label>
+              <input type="text" id="p1-item" placeholder="e.g. Choice Specs"
+                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            </div>
+          </div>
+
+          <!-- Stats simplificados (EVs + IVs más adelante) -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Stats (final values for now)</label>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div>
+                <span class="text-slate-400">HP</span>
+                <input type="number" id="p1-hp" value="150" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">Atk</span>
+                <input type="number" id="p1-atk" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">Def</span>
+                <input type="number" id="p1-def" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">SpA</span>
+                <input type="number" id="p1-spa" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">SpD</span>
+                <input type="number" id="p1-spd" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">Spe</span>
+                <input type="number" id="p1-spe" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Moves -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Moves</label>
+            <div class="space-y-2">
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 1" data-side="p1" data-slot="0" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 2" data-side="p1" data-slot="1" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 3" data-side="p1" data-slot="2" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 4" data-side="p1" data-slot="3" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== FIELD ===== -->
+      <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
+        <div class="bg-slate-100 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+          <h3 class="font-nunito font-bold text-slate-700">
+            <i class="fa-solid fa-cloud-sun mr-2"></i>Field
+          </h3>
+        </div>
+
+        <div class="p-5 space-y-5">
+          <!-- Format -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Format</label>
+            <div class="flex gap-2">
+              <button class="field-btn active flex-1 py-2 rounded-xl text-sm font-medium border border-orange-300 bg-orange-50 text-orange-700" data-value="doubles">Doubles</button>
+              <button class="field-btn flex-1 py-2 rounded-xl text-sm font-medium border border-slate-200 bg-white text-slate-600 hover:bg-slate-50" data-value="singles">Singles</button>
+            </div>
+          </div>
+
+          <!-- Weather -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Weather</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button class="field-btn active py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white" data-group="weather" data-value="none">None</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Sun">Sun</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Rain">Rain</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Sand">Sand</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Snow">Snow</button>
+            </div>
+          </div>
+
+          <!-- Terrain -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Terrain</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="field-btn active py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white" data-group="terrain" data-value="none">None</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Electric">Electric</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Grassy">Grassy</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Psychic">Psychic</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Misty">Misty</button>
+            </div>
+          </div>
+
+          <!-- Common boosts -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Common Effects</label>
+            <div class="flex flex-wrap gap-2">
+              <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
+                <input type="checkbox" id="field-helping-hand" class="rounded text-orange-500" />
+                Helping Hand
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
+                <input type="checkbox" id="field-friend-guard" class="rounded text-orange-500" />
+                Friend Guard
+              </label>
+              <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
+                <input type="checkbox" id="field-protect" class="rounded text-orange-500" />
+                Protect
+              </label>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-400 text-center pt-2">
+            Más opciones de campo se añadirán pronto
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== POKÉMON 2 (Defender) ===== -->
+      <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
+        <div class="bg-blue-50 px-5 py-3 border-b border-blue-100 flex items-center justify-between">
+          <h3 class="font-nunito font-bold text-blue-800">
+            <i class="fa-solid fa-shield-halved mr-2"></i>Defender
+          </h3>
+          <span class="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full font-medium">Pokémon 2</span>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <!-- Species -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Species</label>
+            <input type="text" id="p2-species" placeholder="e.g. Incineroar" 
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent" />
+          </div>
+
+          <!-- Level + Tera -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Level</label>
+              <input type="number" id="p2-level" value="50" min="1" max="100"
+                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Tera Type</label>
+              <select id="p2-tera" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option value="">None</option>
+                <option>Stellar</option>
+                <option>Fire</option>
+                <option>Water</option>
+                <option>Grass</option>
+                <option>Electric</option>
+                <option>Ice</option>
+                <option>Fighting</option>
+                <option>Poison</option>
+                <option>Ground</option>
+                <option>Flying</option>
+                <option>Psychic</option>
+                <option>Bug</option>
+                <option>Rock</option>
+                <option>Ghost</option>
+                <option>Dragon</option>
+                <option>Dark</option>
+                <option>Steel</option>
+                <option>Fairy</option>
+                <option>Normal</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Nature / Ability / Item -->
+          <div class="grid grid-cols-1 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature</label>
+              <select id="p2-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <option>Adamant</option>
+                <option>Modest</option>
+                <option>Jolly</option>
+                <option>Timid</option>
+                <option>Bold</option>
+                <option>Calm</option>
+                <option selected>Serious</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Ability</label>
+              <input type="text" id="p2-ability" placeholder="e.g. Intimidate"
+                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Item</label>
+              <input type="text" id="p2-item" placeholder="e.g. Safety Goggles"
+                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Stats (final values for now)</label>
+            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+              <div>
+                <span class="text-slate-400">HP</span>
+                <input type="number" id="p2-hp" value="170" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">Atk</span>
+                <input type="number" id="p2-atk" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">Def</span>
+                <input type="number" id="p2-def" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">SpA</span>
+                <input type="number" id="p2-spa" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">SpD</span>
+                <input type="number" id="p2-spd" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+              <div>
+                <span class="text-slate-400">Spe</span>
+                <input type="number" id="p2-spe" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Current HP -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Current HP</label>
+            <div class="flex items-center gap-2">
+              <input type="number" id="p2-current-hp" value="170" class="w-20 border border-slate-200 rounded-xl px-3 py-2 text-sm text-center" />
+              <span class="text-slate-400">/</span>
+              <span id="p2-max-hp-display" class="text-sm font-medium">170</span>
+              <div class="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div id="p2-hp-bar" class="h-full bg-green-500 rounded-full transition-all" style="width: 100%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Nota de desarrollo -->
+    <div class="mt-8 text-center text-sm text-slate-500 bg-white/60 rounded-2xl py-4 border border-dashed border-orange-200">
+      <i class="fa-solid fa-check-circle mr-1.5 text-green-500"></i>
+      Motor de cálculo de Smogon (<code>@smogon/calc</code>) ya integrado. 
+      Prueba poniendo nombres en inglés (ej: Flutter Mane + Moonblast vs Incineroar).
+      Próximos pasos: autocompletado, EVs/IVs reales y soporte completo de Champions.
+    </div>
+  </main>
+
+  <footer class="border-t border-orange-100 mt-12 py-6 text-center text-sm text-slate-500">
+    <p>Calculadora · Pokémon Champions Tools</p>
+  </footer>
+
+  <!-- Smogon Damage Calc (oficial) -->
+  <!-- Primero la capa de datos, luego el motor de cálculo -->
+  <script src="https://unpkg.com/@smogon/calc@0.12.0/dist/data/production.min.js"></script>
+  <script src="https://unpkg.com/@smogon/calc@0.12.0/dist/production.min.js"></script>
+
+  <script src="js/common.js"></script>
+  <script src="js/calc.js"></script>
+</body>
+</html>

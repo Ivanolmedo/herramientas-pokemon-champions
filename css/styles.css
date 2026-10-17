@@ -1,0 +1,47 @@
+/* Estilos adicionales para Herramientas Pokémon Champions */
+
+/* Nav activo */
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #c2410c; /* orange-700 */
+}
+
+/* Botones de Field */
+.field-btn.active {
+  background-color: #fff7ed; /* orange-50 */
+  border-color: #fdba74;     /* orange-300 */
+  color: #c2410c;            /* orange-700 */
+  font-weight: 600;
+}
+
+/* Inputs con focus más suave */
+input:focus, select:focus {
+  outline: none;
+}
+
+/* Scrollbar suave (opcional) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #fff7ed;
+}
+::-webkit-scrollbar-thumb {
+  background: #fdba74;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #fb923c;
+}
+
+/* Animación suave para slots del teambuilder */
+.team-slot {
+  transition: all 0.2s ease;
+}
+
+/* Placeholder más visible */
+::placeholder {
+  color: #94a3b8;
+  opacity: 1;
+}

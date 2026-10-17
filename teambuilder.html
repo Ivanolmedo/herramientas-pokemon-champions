@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teambuilder · Pokémon Champions</title>
+  <meta name="description" content="Teambuilder visual e intuitivo para Pokémon Champions (VGC)." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            nunito: ['Nunito', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-amber-50/60 text-slate-800 font-quicksand antialiased min-h-screen">
+
+  <!-- Header / Nav -->
+  <header class="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <a href="index.html" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-lg group-hover:bg-white/30 transition">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div>
+          <h1 class="font-nunito font-extrabold text-lg leading-tight">Herramientas</h1>
+          <p class="text-orange-100 text-xs -mt-0.5">Pokémon Champions</p>
+        </div>
+      </a>
+
+      <nav class="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-full p-1">
+        <a href="index.html" class="nav-link px-4 py-1.5 rounded-full text-sm font-semibold transition hover:bg-white/20">
+          <i class="fa-solid fa-house mr-1.5"></i>Inicio
+        </a>
+        <a href="calc.html" class="nav-link px-4 py-1.5 rounded-full text-sm font-semibold transition hover:bg-white/20">
+          <i class="fa-solid fa-calculator mr-1.5"></i>Calculadora
+        </a>
+        <a href="teambuilder.html" class="nav-link active px-4 py-1.5 rounded-full text-sm font-semibold transition">
+          <i class="fa-solid fa-users mr-1.5"></i>Teambuilder
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+      <div>
+        <h2 class="font-nunito font-extrabold text-2xl sm:text-3xl text-slate-800">
+          Teambuilder
+        </h2>
+        <p class="text-slate-600 text-sm mt-1">
+          Construye tu equipo de 6 Pokémon · En desarrollo
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <button class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition">
+          <i class="fa-solid fa-file-import mr-1.5"></i>Importar
+        </button>
+        <button class="px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition">
+          <i class="fa-solid fa-file-export mr-1.5"></i>Exportar
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid de 6 slots de equipo -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+      <!-- Slot 1 -->
+      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="0">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <span class="text-sm font-medium text-slate-500">Slot 1</span>
+        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
+      </div>
+
+      <!-- Slot 2 -->
+      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="1">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <span class="text-sm font-medium text-slate-500">Slot 2</span>
+        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
+      </div>
+
+      <!-- Slot 3 -->
+      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="2">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <span class="text-sm font-medium text-slate-500">Slot 3</span>
+        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
+      </div>
+
+      <!-- Slot 4 -->
+      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="3">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <span class="text-sm font-medium text-slate-500">Slot 4</span>
+        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
+      </div>
+
+      <!-- Slot 5 -->
+      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="4">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <span class="text-sm font-medium text-slate-500">Slot 5</span>
+        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
+      </div>
+
+      <!-- Slot 6 -->
+      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="5">
+        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <span class="text-sm font-medium text-slate-500">Slot 6</span>
+        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
+      </div>
+    </div>
+
+    <!-- Panel de información / futuros análisis -->
+    <div class="grid lg:grid-cols-3 gap-5">
+      <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+        <h3 class="font-nunito font-bold text-lg text-slate-700 mb-4">
+          <i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i>
+          Resumen del equipo
+        </h3>
+        <div class="text-slate-500 text-sm py-8 text-center">
+          Añade Pokémon para ver tipings, speed tiers, vulnerabilidades y sinergias.
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+        <h3 class="font-nunito font-bold text-lg text-slate-700 mb-4">
+          <i class="fa-solid fa-link text-orange-500 mr-2"></i>
+          Conexión con Calc
+        </h3>
+        <p class="text-sm text-slate-600 mb-4">
+          Más adelante podrás enviar cualquier Pokémon del equipo directamente a la calculadora de daños.
+        </p>
+        <button disabled class="w-full py-2.5 bg-slate-100 text-slate-400 rounded-xl text-sm font-medium cursor-not-allowed">
+          Enviar a Calculadora (próximamente)
+        </button>
+      </div>
+    </div>
+
+    <!-- Nota de desarrollo -->
+    <div class="mt-8 text-center text-sm text-slate-500 bg-white/60 rounded-2xl py-4 border border-dashed border-orange-200">
+      <i class="fa-solid fa-flask mr-1.5 text-orange-400"></i>
+      Esqueleto básico del Teambuilder. La selección de Pokémon, sets y análisis se construirán paso a paso.
+    </div>
+  </main>
+
+  <footer class="border-t border-orange-100 mt-12 py-6 text-center text-sm text-slate-500">
+    <p>Teambuilder · Pokémon Champions Tools</p>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/teambuilder.js"></script>
+</body>
+</html>

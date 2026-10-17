@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Herramientas Pokémon Champions | VGC</title>
+  <meta name="description" content="Calculadora de daños y Teambuilder amigables para Pokémon Champions (VGC). Diseñado para jugadores nuevos y experimentados." />
+
+  <!-- Fonts (igual que pokemonvgc.es) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            nunito: ['Nunito', 'sans-serif'],
+            quicksand: ['Quicksand', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-amber-50/60 text-slate-800 font-quicksand antialiased min-h-screen">
+
+  <!-- Header / Nav -->
+  <header class="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white shadow-lg">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <a href="index.html" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl group-hover:bg-white/30 transition">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div>
+          <h1 class="font-nunito font-extrabold text-xl leading-tight">Herramientas</h1>
+          <p class="text-orange-100 text-sm -mt-0.5">Pokémon Champions</p>
+        </div>
+      </a>
+
+      <nav class="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-full p-1">
+        <a href="index.html" class="nav-link active px-4 py-2 rounded-full text-sm font-semibold transition">
+          <i class="fa-solid fa-house mr-1.5"></i>Inicio
+        </a>
+        <a href="calc.html" class="nav-link px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-white/20">
+          <i class="fa-solid fa-calculator mr-1.5"></i>Calculadora
+        </a>
+        <a href="teambuilder.html" class="nav-link px-4 py-2 rounded-full text-sm font-semibold transition hover:bg-white/20">
+          <i class="fa-solid fa-users mr-1.5"></i>Teambuilder
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <main class="max-w-6xl mx-auto px-4 py-12">
+    <section class="text-center mb-14">
+      <h2 class="font-nunito font-black text-4xl sm:text-5xl text-slate-800 mb-4">
+        Herramientas para <span class="text-orange-600">Champions</span>
+      </h2>
+      <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+        Calculadora de daños más clara y un teambuilder pensado para ayudarte a entender y mejorar en Pokémon Champions.
+      </p>
+    </section>
+
+    <!-- Cards de herramientas -->
+    <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+
+      <!-- Calculadora -->
+      <a href="calc.html" class="group block bg-white rounded-3xl shadow-md hover:shadow-xl border border-orange-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
+        <div class="bg-gradient-to-br from-orange-500 to-amber-500 p-8 text-white">
+          <div class="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-2xl mb-4">
+            <i class="fa-solid fa-calculator"></i>
+          </div>
+          <h3 class="font-nunito font-extrabold text-2xl mb-2">Calculadora de Daños</h3>
+          <p class="text-orange-50 text-sm opacity-90">
+            Interfaz más amigable que la de Smogon. Perfecta para aprender y calcular rápido.
+          </p>
+        </div>
+        <div class="p-6 flex items-center justify-between text-slate-600">
+          <span class="text-sm font-medium">Abrir herramienta</span>
+          <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+        </div>
+      </a>
+
+      <!-- Teambuilder -->
+      <a href="teambuilder.html" class="group block bg-white rounded-3xl shadow-md hover:shadow-xl border border-orange-100 overflow-hidden transition-all duration-300 hover:-translate-y-1">
+        <div class="bg-gradient-to-br from-slate-700 to-slate-800 p-8 text-white">
+          <div class="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center text-2xl mb-4">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <h3 class="font-nunito font-extrabold text-2xl mb-2">Teambuilder</h3>
+          <p class="text-slate-200 text-sm opacity-90">
+            Construye equipos de forma visual e intuitiva. En desarrollo — conexión con la calculadora próximamente.
+          </p>
+        </div>
+        <div class="p-6 flex items-center justify-between text-slate-600">
+          <span class="text-sm font-medium">Abrir herramienta</span>
+          <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+        </div>
+      </a>
+    </div>
+
+    <!-- Nota inferior -->
+    <p class="text-center text-sm text-slate-500 mt-12">
+      Proyecto independiente · Pensado como posible complemento para la comunidad VGC
+    </p>
+  </main>
+
+  <footer class="border-t border-orange-100 mt-16 py-8 text-center text-sm text-slate-500">
+    <p>Hecho con ❤️ para jugadores de Pokémon Champions</p>
+  </footer>
+
+  <script src="js/common.js"></script>
+</body>
+</html>
