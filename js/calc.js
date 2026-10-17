@@ -32,6 +32,96 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ======================================================
+// SPRITES
+// ======================================================
+function toID(text) {
+  return (text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+function updateSprite(side) {
+  const speciesInput = document.getElementById(`${side}-species`);
+  const spriteImg = document.getElementById(`${side}-sprite`);
+  if (!speciesInput || !spriteImg) return;
+
+  const name = speciesInput.value.trim();
+  if (!name) {
+    spriteImg.classList.add('hidden');
+    spriteImg.src = '';
+    return;
+  }
+
+  // Intentamos obtener el id correcto desde calc si es posible
+  let spriteId = toID(name);
+
+  // Casos especiales comunes de formes
+  const specials = {
+    'charizardmegax': 'charizard-megax',
+    'charizardmegay': 'charizard-megay',
+    'venusaurmega': 'venusaur-mega',
+    'blastoisemega': 'blastoise-mega',
+    'gengarmega': 'gengar-mega',
+    'gyaradosmega': 'gyarados-mega',
+    'kangaskhanmega': 'kangaskhan-mega',
+    'pinsirmega': 'pinsir-mega',
+    'aerodactylmega': 'aerodactyl-mega',
+    'mewtwomegax': 'mewtwo-megax',
+    'mewtwomegay': 'mewtwo-megay',
+    'ampharosmega': 'ampharos-mega',
+    'scizormega': 'scizor-mega',
+    'heracrossmega': 'heracross-mega',
+    'houndoommega': 'houndoom-mega',
+    'tyranitarmega': 'tyranitar-mega',
+    'blazikenmega': 'blaziken-mega',
+    'gardevoirmega': 'gardevoir-mega',
+    'mawilemega': 'mawile-mega',
+    'aggronmega': 'aggron-mega',
+    'medichammega': 'medicham-mega',
+    'manectricmega': 'manectric-mega',
+    'banettemega': 'banette-mega',
+    'absolmega': 'absol-mega',
+    'garchompmega': 'garchomp-mega',
+    'lucariomega': 'lucario-mega',
+    'abomasnowmega': 'abomasnow-mega',
+    'beedrillmega': 'beedrill-mega',
+    'pidgeotmega': 'pidgeot-mega',
+    'slowbromega': 'slowbro-mega',
+    'steelixmega': 'steelix-mega',
+    'sceptilemega': 'sceptile-mega',
+    'swamperttmega': 'swampert-mega',
+    'sableyemega': 'sableye-mega',
+    'sharpedomega': 'sharpedo-mega',
+    'cameruptmega': 'camerupt-mega',
+    'altariamega': 'altaria-mega',
+    'glaliemega': 'glalie-mega',
+    'salamencemega': 'salamence-mega',
+    'metagrossmega': 'metagross-mega',
+    'latiasmega': 'latias-mega',
+    'latiosmega': 'latios-mega',
+    'rayquazamega': 'rayquaza-mega',
+    'lopunnymega': 'lopunny-mega',
+    'gallademega': 'gallade-mega',
+    'audinomega': 'audino-mega',
+    'dianciemega': 'diancie-mega'
+  };
+
+  if (specials[spriteId]) {
+    spriteId = specials[spriteId];
+  }
+
+  // Usamos sprites de Pokémon Showdown (gen5 - estables y ligeros)
+  const url = `https://play.pokemonshowdown.com/sprites/gen5/${spriteId}.png`;
+
+  spriteImg.src = url;
+  spriteImg.alt = name;
+  spriteImg.classList.remove('hidden');
+
+  // Si falla la carga, ocultamos el icono
+  spriteImg.onerror = () => {
+    spriteImg.classList.add('hidden');
+  };
+}
+
+  // ======================================================
   // STAT POINTS
   // ======================================================
   function setupSPControls() {
@@ -111,29 +201,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // ======================================================
   // FIELD
   // ======================================================
-  function createField(attackerSide, defenderSide) {
-    const weatherBtn = document.querySelector('.field-btn[data-group="weather"].active');
-    const terrainBtn = document.querySelector('.field-btn[data-group="terrain"].active');
-    const formatBtn  = document.querySelector('.field-btn:not([data-group]).active');
+function createField(attackerSide, defenderSide) {
+  const weatherBtn = document.querySelector('.field-btn[data-group="weather"].active');
+  const terrainBtn = document.querySelector('.field-btn[data-group="terrain"].active');
+  const formatBtn  = document.querySelector('.field-btn:not([data-group]).active');
 
-    return new calc.Field({
-      gameType: formatBtn?.dataset.value === 'singles' ? 'Singles' : 'Doubles',
-      weather: weatherBtn?.dataset.value === 'none' ? undefined : weatherBtn?.dataset.value,
-      terrain: terrainBtn?.dataset.value === 'none' ? undefined : terrainBtn?.dataset.value,
-      attackerSide: {
-        isHelpingHand: document.getElementById(`${attackerSide}-helping-hand`)?.checked || false,
-        isReflect:     document.getElementById(`${attackerSide}-reflect`)?.checked || false,
-        isLightScreen: document.getElementById(`${attackerSide}-lightscreen`)?.checked || false,
-        isFriendGuard: document.getElementById(`${attackerSide}-friendguard`)?.checked || false,
-      },
-      defenderSide: {
-        isHelpingHand: document.getElementById(`${defenderSide}-helping-hand`)?.checked || false,
-        isReflect:     document.getElementById(`${defenderSide}-reflect`)?.checked || false,
-        isLightScreen: document.getElementById(`${defenderSide}-lightscreen`)?.checked || false,
-        isFriendGuard: document.getElementById(`${defenderSide}-friendguard`)?.checked || false,
-      }
-    });
-  }
+  return new calc.Field({
+    gameType: formatBtn?.dataset.value === 'singles' ? 'Singles' : 'Doubles',
+    weather: weatherBtn?.dataset.value === 'none' ? undefined : weatherBtn?.dataset.value,
+    terrain: terrainBtn?.dataset.value === 'none' ? undefined : terrainBtn?.dataset.value,
+    attackerSide: {
+      isHelpingHand: document.getElementById(`${attackerSide}-helping-hand`)?.checked || false,
+      isReflect:     document.getElementById(`${attackerSide}-reflect`)?.checked || false,
+      isLightScreen: document.getElementById(`${attackerSide}-lightscreen`)?.checked || false,
+      isAuroraVeil:  document.getElementById(`${attackerSide}-auroraveil`)?.checked || false,
+      isTailwind:    document.getElementById(`${attackerSide}-tailwind`)?.checked || false,
+      isFriendGuard: document.getElementById(`${attackerSide}-friendguard`)?.checked || false,
+    },
+    defenderSide: {
+      isHelpingHand: document.getElementById(`${defenderSide}-helping-hand`)?.checked || false,
+      isReflect:     document.getElementById(`${defenderSide}-reflect`)?.checked || false,
+      isLightScreen: document.getElementById(`${defenderSide}-lightscreen`)?.checked || false,
+      isAuroraVeil:  document.getElementById(`${defenderSide}-auroraveil`)?.checked || false,
+      isTailwind:    document.getElementById(`${defenderSide}-tailwind`)?.checked || false,
+      isFriendGuard: document.getElementById(`${defenderSide}-friendguard`)?.checked || false,
+    }
+  });
+}
 
   // ======================================================
   // CÁLCULO DE UN LADO (con manejo de movimientos sin daño)
@@ -216,8 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // FUNCIÓN PRINCIPAL
   // ======================================================
   function runCalculation() {
+    updateSprite('my');
+    updateSprite('opp');
+
     const myPokemon  = createPokemon('my');
     const oppPokemon = createPokemon('opp');
+
 
     updateFinalStats('my', myPokemon);
     updateFinalStats('opp', oppPokemon);
@@ -332,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (setData.ability) {
       applyWeatherTerrainFromAbility(side, setData.ability);
     }
-
+    updateSprite(side);
     runCalculation();
   }
 
@@ -415,89 +513,137 @@ document.addEventListener('DOMContentLoaded', () => {
   // AUTOCOMPLETADO DE SETS
   // ======================================================
   function setupSetsAutocomplete() {
-    if (typeof SETDEX_CHAMPIONS === 'undefined') {
-      console.warn('SETDEX_CHAMPIONS aún no disponible...');
-      setTimeout(setupSetsAutocomplete, 500);
-      return;
-    }
-
-    console.log('%c[Sets] Datos de Champions cargados', 'color: #16a34a; font-weight: bold;');
-
-    const allSets = [];
-    for (const species in SETDEX_CHAMPIONS) {
-      for (const setName in SETDEX_CHAMPIONS[species]) {
-        allSets.push({
-          label: `${species} ${setName}`,
-          species,
-          setName,
-          data: SETDEX_CHAMPIONS[species][setName]
-        });
-      }
-    }
-
-    function attachSets(input, side) {
-      if (!input.parentElement.classList.contains('autocomplete-wrapper')) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'autocomplete-wrapper';
-        input.parentNode.insertBefore(wrapper, input);
-        wrapper.appendChild(input);
-      }
-
-      const wrapper = input.parentElement;
-      let listEl = null;
-      let active = -1;
-
-      const close = () => { if (listEl) { listEl.remove(); listEl = null; active = -1; } };
-
-      input.addEventListener('input', () => {
-        const val = input.value.trim().toLowerCase();
-        if (val.length < 2) return close();
-
-        const matches = allSets.filter(s =>
-          s.label.toLowerCase().includes(val) || s.species.toLowerCase().includes(val)
-        ).slice(0, 15);
-
-        close();
-        if (!matches.length) return;
-
-        listEl = document.createElement('div');
-        listEl.className = 'autocomplete-list';
-
-        matches.forEach(item => {
-          const div = document.createElement('div');
-          div.className = 'autocomplete-item';
-          div.innerHTML = `<strong>${item.species}</strong> <span class="text-slate-500 text-xs">${item.setName}</span>`;
-          div.addEventListener('mousedown', e => {
-            e.preventDefault();
-            applySet(side, item.data, item.species);
-            input.value = item.species;
-            close();
-          });
-          listEl.appendChild(div);
-        });
-        wrapper.appendChild(listEl);
-      });
-
-      input.addEventListener('keydown', e => {
-        if (!listEl) return;
-        const items = listEl.querySelectorAll('.autocomplete-item');
-        if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); }
-        else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); }
-        else if (e.key === 'Enter' && active >= 0) {
-          e.preventDefault();
-          items[active].dispatchEvent(new Event('mousedown'));
-        } else if (e.key === 'Escape') close();
-        items.forEach((it, i) => it.classList.toggle('active', i === active));
-      });
-
-      document.addEventListener('click', e => { if (!wrapper.contains(e.target)) close(); });
-    }
-
-    const myInput  = document.getElementById('my-species');
-    const oppInput = document.getElementById('opp-species');
-    if (myInput)  attachSets(myInput, 'my');
-    if (oppInput) attachSets(oppInput, 'opp');
+  if (typeof SETDEX_CHAMPIONS === 'undefined') {
+    console.warn('SETDEX_CHAMPIONS aún no disponible...');
+    setTimeout(setupSetsAutocomplete, 500);
+    return;
   }
+
+  console.log('%c[Sets] Datos de Champions cargados', 'color: #16a34a; font-weight: bold;');
+
+  // Lista de todos los sets
+  const allSets = [];
+  for (const species in SETDEX_CHAMPIONS) {
+    for (const setName in SETDEX_CHAMPIONS[species]) {
+      allSets.push({
+        label: `${species} ${setName}`,
+        species,
+        setName,
+        data: SETDEX_CHAMPIONS[species][setName],
+        isSet: true
+      });
+    }
+  }
+
+  // También añadimos todas las species en blanco (sin set)
+  const allSpecies = Object.keys(calc.SPECIES[9] || calc.SPECIES || {}).sort();
+  allSpecies.forEach(sp => {
+    allSets.push({
+      label: sp,
+      species: sp,
+      setName: '(Blank)',
+      data: null,
+      isSet: false
+    });
+  });
+
+  function attachSets(input, side) {
+    if (!input.parentElement.classList.contains('autocomplete-wrapper')) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'autocomplete-wrapper';
+      input.parentNode.insertBefore(wrapper, input);
+      wrapper.appendChild(input);
+    }
+
+    const wrapper = input.parentElement;
+    let listEl = null;
+    let active = -1;
+
+    const close = () => { if (listEl) { listEl.remove(); listEl = null; active = -1; } };
+
+    input.addEventListener('input', () => {
+      const val = input.value.trim().toLowerCase();
+      if (val.length < 1) return close();
+
+      // Priorizamos sets que coincidan + species en blanco
+      const matches = allSets
+        .filter(s => s.label.toLowerCase().includes(val) || s.species.toLowerCase().includes(val))
+        .slice(0, 18);
+
+      close();
+      if (!matches.length) return;
+
+      listEl = document.createElement('div');
+      listEl.className = 'autocomplete-list';
+
+      matches.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+
+        if (item.isSet) {
+          div.innerHTML = `<strong>${item.species}</strong> <span class="text-slate-500 text-xs">${item.setName}</span>`;
+        } else {
+          div.innerHTML = `<strong>${item.species}</strong> <span class="text-slate-400 text-xs">(Blank)</span>`;
+        }
+
+        div.addEventListener('mousedown', e => {
+          e.preventDefault();
+
+          if (item.isSet && item.data) {
+            // Aplicar set completo
+            applySet(side, item.data, item.species);
+          } else {
+            // Solo poner el nombre (set en blanco)
+            document.getElementById(`${side}-species`).value = item.species;
+            // Limpiar el resto de campos para que sea realmente "blank"
+            document.getElementById(`${side}-ability`).value = '';
+            document.getElementById(`${side}-item`).value = '';
+            document.getElementById(`${side}-nature`).value = 'Serious';
+
+            // Poner todos los SP a 0
+            ['hp', 'atk', 'def', 'spa', 'spd', 'spe'].forEach(stat => {
+              const num = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
+              const sld = document.querySelector(`.sp-slider[data-side="${side}"][data-stat="${stat}"]`);
+              if (num) num.value = 0;
+              if (sld) sld.value = 0;
+            });
+            updateSPCounter(side);
+
+            // Limpiar moves
+            document.querySelectorAll(`.move-input[data-side="${side}"]`).forEach(inp => inp.value = '');
+          }
+
+          input.value = item.species;
+          close();
+          runCalculation();
+        });
+
+        listEl.appendChild(div);
+      });
+
+      wrapper.appendChild(listEl);
+    });
+
+    input.addEventListener('keydown', e => {
+      if (!listEl) return;
+      const items = listEl.querySelectorAll('.autocomplete-item');
+      if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); }
+      else if (e.key === 'Enter' && active >= 0) {
+        e.preventDefault();
+        items[active].dispatchEvent(new Event('mousedown'));
+      } else if (e.key === 'Escape') close();
+      items.forEach((it, i) => it.classList.toggle('active', i === active));
+    });
+
+    document.addEventListener('click', e => { if (!wrapper.contains(e.target)) close(); });
+  }
+
+  const myInput  = document.getElementById('my-species');
+  const oppInput = document.getElementById('opp-species');
+  if (myInput)  attachSets(myInput, 'my');
+  if (oppInput) attachSets(oppInput, 'opp');
+}
 
   // ======================================================
   // EVENTOS
@@ -516,14 +662,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const watch = [
-    '#my-species', '#my-nature', '#my-ability', '#my-item',
-    '#opp-species', '#opp-nature', '#opp-ability', '#opp-item',
-    '.move-input',
-    '#my-helping-hand', '#opp-helping-hand',
-    '#my-reflect', '#opp-reflect',
-    '#my-lightscreen', '#opp-lightscreen',
-    '#my-friendguard', '#opp-friendguard'
-  ];
+  '#my-species', '#my-nature', '#my-ability', '#my-item',
+  '#opp-species', '#opp-nature', '#opp-ability', '#opp-item',
+  '.move-input',
+  '#my-helping-hand', '#opp-helping-hand',
+  '#my-reflect', '#opp-reflect',
+  '#my-lightscreen', '#opp-lightscreen',
+  '#my-auroraveil', '#opp-auroraveil',
+  '#my-tailwind', '#opp-tailwind',
+  '#my-friendguard', '#opp-friendguard'
+];
 
   document.querySelectorAll(watch.join(',')).forEach(el => {
     el.addEventListener('change', runCalculation);
