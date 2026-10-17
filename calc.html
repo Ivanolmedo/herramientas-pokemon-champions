@@ -43,7 +43,7 @@
 </head>
 <body class="bg-amber-50/60 text-slate-800 font-quicksand antialiased min-h-screen">
 
-  <!-- Header / Nav (igual en todas las páginas) -->
+  <!-- Header -->
   <header class="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white shadow-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
       <a href="index.html" class="flex items-center gap-3 group">
@@ -72,31 +72,23 @@
 
   <main class="max-w-7xl mx-auto px-4 py-6">
 
-    <!-- Título de la página -->
     <div class="mb-6">
-      <h2 class="font-nunito font-extrabold text-2xl sm:text-3xl text-slate-800">
-        Calculadora de Daños
-      </h2>
+      <h2 class="font-nunito font-extrabold text-2xl sm:text-3xl text-slate-800">Calculadora de Daños</h2>
       <p class="text-slate-600 text-sm mt-1">
-        Versión más clara y amigable · Modo <span class="font-semibold text-orange-600">Champions</span>
+        Versión más clara y amigable · Modo <span class="font-semibold text-orange-600">Champions</span> (Stat Points)
       </p>
     </div>
 
-    <!-- Resultados principales (zona en inglés por ahora) -->
-    <section id="results-panel" class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 mb-6">
+    <!-- Resultados -->
+    <section class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 mb-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h3 class="font-nunito font-bold text-lg text-slate-700">
-          <i class="fa-solid fa-chart-simple text-orange-500 mr-2"></i>
-          Damage Results
+          <i class="fa-solid fa-chart-simple text-orange-500 mr-2"></i>Damage Results
         </h3>
-        <div class="flex gap-2">
-          <button id="btn-copy-result" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full transition">
-            <i class="fa-regular fa-copy mr-1"></i> Copy
-          </button>
-        </div>
+        <button id="btn-copy-result" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full transition">
+          <i class="fa-regular fa-copy mr-1"></i> Copy
+        </button>
       </div>
-
-      <!-- Aquí irán los rangos de daño -->
       <div id="damage-output" class="space-y-3">
         <div class="text-center text-slate-400 py-8">
           <i class="fa-solid fa-arrow-down text-2xl mb-2"></i>
@@ -105,10 +97,10 @@
       </div>
     </section>
 
-    <!-- Grid principal: Attacker | Field | Defender -->
+    <!-- Grid principal -->
     <div class="grid lg:grid-cols-3 gap-5">
 
-      <!-- ===== POKÉMON 1 (Attacker) ===== -->
+      <!-- ==================== ATTACKER ==================== -->
       <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
         <div class="bg-orange-50 px-5 py-3 border-b border-orange-100 flex items-center justify-between">
           <h3 class="font-nunito font-bold text-orange-800">
@@ -121,57 +113,31 @@
           <!-- Species -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Species</label>
-            <input type="text" id="p1-species" placeholder="e.g. Flutter Mane" 
-                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" />
+            <input type="text" id="p1-species" placeholder="e.g. Flutter Mane"
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
           </div>
 
-          <!-- Level + Tera -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Level</label>
-              <input type="number" id="p1-level" value="50" min="1" max="100"
-                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Tera Type</label>
-              <select id="p1-tera" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
-                <option value="">None</option>
-                <option>Stellar</option>
-                <option>Fire</option>
-                <option>Water</option>
-                <option>Grass</option>
-                <option>Electric</option>
-                <option>Ice</option>
-                <option>Fighting</option>
-                <option>Poison</option>
-                <option>Ground</option>
-                <option>Flying</option>
-                <option>Psychic</option>
-                <option>Bug</option>
-                <option>Rock</option>
-                <option>Ghost</option>
-                <option>Dragon</option>
-                <option>Dark</option>
-                <option>Steel</option>
-                <option>Fairy</option>
-                <option>Normal</option>
-              </select>
-            </div>
+          <!-- Level -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Level</label>
+            <input type="number" id="p1-level" value="50" readonly
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500" />
           </div>
 
           <!-- Nature / Ability / Item -->
-          <div class="grid grid-cols-1 gap-3">
+          <div class="space-y-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature</label>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature (Stat Alignment)</label>
               <select id="p1-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
-                <option>Adamant</option>
-                <option>Modest</option>
-                <option>Jolly</option>
-                <option>Timid</option>
-                <option>Bold</option>
-                <option>Calm</option>
-                <option selected>Serious</option>
-                <!-- Se completarán después -->
+                <option value="Serious" selected>Serious</option>
+                <option value="Adamant">Adamant (+Atk -SpA)</option>
+                <option value="Modest">Modest (+SpA -Atk)</option>
+                <option value="Jolly">Jolly (+Spe -SpA)</option>
+                <option value="Timid">Timid (+Spe -Atk)</option>
+                <option value="Bold">Bold (+Def -Atk)</option>
+                <option value="Calm">Calm (+SpD -Atk)</option>
+                <option value="Impish">Impish (+Def -SpA)</option>
+                <option value="Careful">Careful (+SpD -SpA)</option>
               </select>
             </div>
             <div>
@@ -186,33 +152,56 @@
             </div>
           </div>
 
-          <!-- Stats simplificados (EVs + IVs más adelante) -->
+          <!-- Stat Points + Sliders -->
           <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Stats (final values for now)</label>
-            <div class="grid grid-cols-3 gap-2 text-center text-xs">
-              <div>
-                <span class="text-slate-400">HP</span>
-                <input type="number" id="p1-hp" value="150" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+            <div class="flex items-center justify-between mb-3">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Stat Points (SP)</label>
+              <span id="p1-sp-remaining" class="text-xs font-bold text-orange-600">0 / 66</span>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">HP</span>
+                <input type="range" id="p1-sp-hp-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="hp">
+                <input type="number" id="p1-sp-hp" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="hp">
               </div>
-              <div>
-                <span class="text-slate-400">Atk</span>
-                <input type="number" id="p1-atk" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">Atk</span>
+                <input type="range" id="p1-sp-atk-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="atk">
+                <input type="number" id="p1-sp-atk" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="atk">
               </div>
-              <div>
-                <span class="text-slate-400">Def</span>
-                <input type="number" id="p1-def" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">Def</span>
+                <input type="range" id="p1-sp-def-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="def">
+                <input type="number" id="p1-sp-def" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="def">
               </div>
-              <div>
-                <span class="text-slate-400">SpA</span>
-                <input type="number" id="p1-spa" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">SpA</span>
+                <input type="range" id="p1-sp-spa-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="spa">
+                <input type="number" id="p1-sp-spa" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="spa">
               </div>
-              <div>
-                <span class="text-slate-400">SpD</span>
-                <input type="number" id="p1-spd" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">SpD</span>
+                <input type="range" id="p1-sp-spd-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="spd">
+                <input type="number" id="p1-sp-spd" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="spd">
               </div>
-              <div>
-                <span class="text-slate-400">Spe</span>
-                <input type="number" id="p1-spe" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">Spe</span>
+                <input type="range" id="p1-sp-spe-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="spe">
+                <input type="number" id="p1-sp-spe" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="spe">
+              </div>
+            </div>
+
+            <!-- Final Stats -->
+            <div class="mt-4 pt-3 border-t border-slate-100">
+              <p class="text-xs text-slate-400 mb-1.5">Final Stats (Lv.50 · IV 31)</p>
+              <div class="grid grid-cols-6 gap-1 text-center text-xs font-medium text-slate-700">
+                <div><span id="p1-final-hp" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">HP</span></div>
+                <div><span id="p1-final-atk" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Atk</span></div>
+                <div><span id="p1-final-def" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Def</span></div>
+                <div><span id="p1-final-spa" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpA</span></div>
+                <div><span id="p1-final-spd" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpD</span></div>
+                <div><span id="p1-final-spe" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Spe</span></div>
               </div>
             </div>
           </div>
@@ -230,16 +219,14 @@
         </div>
       </section>
 
-      <!-- ===== FIELD ===== -->
+      <!-- ==================== FIELD ==================== -->
       <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
-        <div class="bg-slate-100 px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+        <div class="bg-slate-100 px-5 py-3 border-b border-slate-200">
           <h3 class="font-nunito font-bold text-slate-700">
             <i class="fa-solid fa-cloud-sun mr-2"></i>Field
           </h3>
         </div>
-
         <div class="p-5 space-y-5">
-          <!-- Format -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Format</label>
             <div class="flex gap-2">
@@ -247,8 +234,6 @@
               <button class="field-btn flex-1 py-2 rounded-xl text-sm font-medium border border-slate-200 bg-white text-slate-600 hover:bg-slate-50" data-value="singles">Singles</button>
             </div>
           </div>
-
-          <!-- Weather -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Weather</label>
             <div class="grid grid-cols-3 gap-2">
@@ -259,8 +244,6 @@
               <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Snow">Snow</button>
             </div>
           </div>
-
-          <!-- Terrain -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Terrain</label>
             <div class="grid grid-cols-2 gap-2">
@@ -271,33 +254,24 @@
               <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Misty">Misty</button>
             </div>
           </div>
-
-          <!-- Common boosts -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Common Effects</label>
             <div class="flex flex-wrap gap-2">
               <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
-                <input type="checkbox" id="field-helping-hand" class="rounded text-orange-500" />
-                Helping Hand
+                <input type="checkbox" id="field-helping-hand" class="rounded text-orange-500" /> Helping Hand
               </label>
               <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
-                <input type="checkbox" id="field-friend-guard" class="rounded text-orange-500" />
-                Friend Guard
+                <input type="checkbox" id="field-friend-guard" class="rounded text-orange-500" /> Friend Guard
               </label>
               <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
-                <input type="checkbox" id="field-protect" class="rounded text-orange-500" />
-                Protect
+                <input type="checkbox" id="field-protect" class="rounded text-orange-500" /> Protect
               </label>
             </div>
           </div>
-
-          <p class="text-xs text-slate-400 text-center pt-2">
-            Más opciones de campo se añadirán pronto
-          </p>
         </div>
       </section>
 
-      <!-- ===== POKÉMON 2 (Defender) ===== -->
+      <!-- ==================== DEFENDER ==================== -->
       <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
         <div class="bg-blue-50 px-5 py-3 border-b border-blue-100 flex items-center justify-between">
           <h3 class="font-nunito font-bold text-blue-800">
@@ -310,56 +284,31 @@
           <!-- Species -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Species</label>
-            <input type="text" id="p2-species" placeholder="e.g. Incineroar" 
-                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent" />
+            <input type="text" id="p2-species" placeholder="e.g. Incineroar"
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
           </div>
 
-          <!-- Level + Tera -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Level</label>
-              <input type="number" id="p2-level" value="50" min="1" max="100"
-                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Tera Type</label>
-              <select id="p2-tera" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <option value="">None</option>
-                <option>Stellar</option>
-                <option>Fire</option>
-                <option>Water</option>
-                <option>Grass</option>
-                <option>Electric</option>
-                <option>Ice</option>
-                <option>Fighting</option>
-                <option>Poison</option>
-                <option>Ground</option>
-                <option>Flying</option>
-                <option>Psychic</option>
-                <option>Bug</option>
-                <option>Rock</option>
-                <option>Ghost</option>
-                <option>Dragon</option>
-                <option>Dark</option>
-                <option>Steel</option>
-                <option>Fairy</option>
-                <option>Normal</option>
-              </select>
-            </div>
+          <!-- Level -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Level</label>
+            <input type="number" id="p2-level" value="50" readonly
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500" />
           </div>
 
           <!-- Nature / Ability / Item -->
-          <div class="grid grid-cols-1 gap-3">
+          <div class="space-y-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature</label>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature (Stat Alignment)</label>
               <select id="p2-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <option>Adamant</option>
-                <option>Modest</option>
-                <option>Jolly</option>
-                <option>Timid</option>
-                <option>Bold</option>
-                <option>Calm</option>
-                <option selected>Serious</option>
+                <option value="Serious" selected>Serious</option>
+                <option value="Adamant">Adamant (+Atk -SpA)</option>
+                <option value="Modest">Modest (+SpA -Atk)</option>
+                <option value="Jolly">Jolly (+Spe -SpA)</option>
+                <option value="Timid">Timid (+Spe -Atk)</option>
+                <option value="Bold">Bold (+Def -Atk)</option>
+                <option value="Calm">Calm (+SpD -Atk)</option>
+                <option value="Impish">Impish (+Def -SpA)</option>
+                <option value="Careful">Careful (+SpD -SpA)</option>
               </select>
             </div>
             <div>
@@ -374,46 +323,56 @@
             </div>
           </div>
 
-          <!-- Stats -->
+          <!-- Stat Points + Sliders -->
           <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Stats (final values for now)</label>
-            <div class="grid grid-cols-3 gap-2 text-center text-xs">
-              <div>
-                <span class="text-slate-400">HP</span>
-                <input type="number" id="p2-hp" value="170" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+            <div class="flex items-center justify-between mb-3">
+              <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Stat Points (SP)</label>
+              <span id="p2-sp-remaining" class="text-xs font-bold text-blue-600">0 / 66</span>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">HP</span>
+                <input type="range" id="p2-sp-hp-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="hp">
+                <input type="number" id="p2-sp-hp" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="hp">
               </div>
-              <div>
-                <span class="text-slate-400">Atk</span>
-                <input type="number" id="p2-atk" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">Atk</span>
+                <input type="range" id="p2-sp-atk-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="atk">
+                <input type="number" id="p2-sp-atk" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="atk">
               </div>
-              <div>
-                <span class="text-slate-400">Def</span>
-                <input type="number" id="p2-def" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">Def</span>
+                <input type="range" id="p2-sp-def-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="def">
+                <input type="number" id="p2-sp-def" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="def">
               </div>
-              <div>
-                <span class="text-slate-400">SpA</span>
-                <input type="number" id="p2-spa" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">SpA</span>
+                <input type="range" id="p2-sp-spa-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="spa">
+                <input type="number" id="p2-sp-spa" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="spa">
               </div>
-              <div>
-                <span class="text-slate-400">SpD</span>
-                <input type="number" id="p2-spd" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">SpD</span>
+                <input type="range" id="p2-sp-spd-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="spd">
+                <input type="number" id="p2-sp-spd" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="spd">
               </div>
-              <div>
-                <span class="text-slate-400">Spe</span>
-                <input type="number" id="p2-spe" value="100" class="w-full mt-1 border border-slate-200 rounded-lg px-1 py-1.5 text-sm text-center" />
+              <div class="flex items-center gap-3">
+                <span class="w-8 text-xs text-slate-500 font-medium">Spe</span>
+                <input type="range" id="p2-sp-spe-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="spe">
+                <input type="number" id="p2-sp-spe" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="spe">
               </div>
             </div>
-          </div>
 
-          <!-- Current HP -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Current HP</label>
-            <div class="flex items-center gap-2">
-              <input type="number" id="p2-current-hp" value="170" class="w-20 border border-slate-200 rounded-xl px-3 py-2 text-sm text-center" />
-              <span class="text-slate-400">/</span>
-              <span id="p2-max-hp-display" class="text-sm font-medium">170</span>
-              <div class="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                <div id="p2-hp-bar" class="h-full bg-green-500 rounded-full transition-all" style="width: 100%"></div>
+            <!-- Final Stats -->
+            <div class="mt-4 pt-3 border-t border-slate-100">
+              <p class="text-xs text-slate-400 mb-1.5">Final Stats (Lv.50 · IV 31)</p>
+              <div class="grid grid-cols-6 gap-1 text-center text-xs font-medium text-slate-700">
+                <div><span id="p2-final-hp" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">HP</span></div>
+                <div><span id="p2-final-atk" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Atk</span></div>
+                <div><span id="p2-final-def" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Def</span></div>
+                <div><span id="p2-final-spa" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpA</span></div>
+                <div><span id="p2-final-spd" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpD</span></div>
+                <div><span id="p2-final-spe" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Spe</span></div>
               </div>
             </div>
           </div>
@@ -421,12 +380,9 @@
       </section>
     </div>
 
-    <!-- Nota de desarrollo -->
     <div class="mt-8 text-center text-sm text-slate-500 bg-white/60 rounded-2xl py-4 border border-dashed border-orange-200">
       <i class="fa-solid fa-check-circle mr-1.5 text-green-500"></i>
-      Motor de cálculo de Smogon (<code>@smogon/calc</code>) ya integrado. 
-      Prueba poniendo nombres en inglés (ej: Flutter Mane + Moonblast vs Incineroar).
-      Próximos pasos: autocompletado, EVs/IVs reales y soporte completo de Champions.
+      Stat Points + barras + items funcionando. Próximo paso: autocompletado de sets.
     </div>
   </main>
 
@@ -434,8 +390,7 @@
     <p>Calculadora · Pokémon Champions Tools</p>
   </footer>
 
-  <!-- Smogon Damage Calc (oficial) -->
-  <!-- Primero la capa de datos, luego el motor de cálculo -->
+  <!-- Smogon Calc -->
   <script src="https://unpkg.com/@smogon/calc@0.12.0/dist/data/production.min.js"></script>
   <script src="https://unpkg.com/@smogon/calc@0.12.0/dist/production.min.js"></script>
 
