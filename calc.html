@@ -4,12 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calculadora de Daños · Pokémon Champions</title>
-  <meta name="description" content="Calculadora de daños amigable para Pokémon Champions. Más clara y fácil de usar que la de Smogon." />
+  <meta name="description" content="Calculadora bilateral para Pokémon Champions. Calcula daño ofensivo y defensivo al mismo tiempo." />
 
+  <!-- Fuentes -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
 
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -18,20 +20,6 @@
           fontFamily: {
             nunito: ['Nunito', 'sans-serif'],
             quicksand: ['Quicksand', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50:  '#fff7ed',
-              100: '#ffedd5',
-              200: '#fed7aa',
-              300: '#fdba74',
-              400: '#fb923c',
-              500: '#f97316',
-              600: '#ea580c',
-              700: '#c2410c',
-              800: '#9a3412',
-              900: '#7c2d12',
-            }
           }
         }
       }
@@ -43,7 +31,7 @@
 </head>
 <body class="bg-amber-50/60 text-slate-800 font-quicksand antialiased min-h-screen">
 
-  <!-- Header -->
+  <!-- ==================== HEADER ==================== -->
   <header class="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white shadow-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
       <a href="index.html" class="flex items-center gap-3 group">
@@ -72,63 +60,74 @@
 
   <main class="max-w-7xl mx-auto px-4 py-6">
 
+    <!-- Título -->
     <div class="mb-6">
       <h2 class="font-nunito font-extrabold text-2xl sm:text-3xl text-slate-800">Calculadora de Daños</h2>
       <p class="text-slate-600 text-sm mt-1">
-        Versión más clara y amigable · Modo <span class="font-semibold text-orange-600">Champions</span> (Stat Points)
+        Modo <span class="font-semibold text-orange-600">Champions</span> · Daño en ambas direcciones
       </p>
     </div>
 
-    <!-- Resultados -->
+    <!-- ==================== RESULTADOS ==================== -->
     <section class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 mb-6">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+      <div class="flex items-center justify-between mb-4">
         <h3 class="font-nunito font-bold text-lg text-slate-700">
-          <i class="fa-solid fa-chart-simple text-orange-500 mr-2"></i>Damage Results
+          <i class="fa-solid fa-chart-simple text-orange-500 mr-2"></i>Resultados
         </h3>
         <button id="btn-copy-result" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full transition">
           <i class="fa-regular fa-copy mr-1"></i> Copy
         </button>
       </div>
-      <div id="damage-output" class="space-y-3">
-        <div class="text-center text-slate-400 py-8">
-          <i class="fa-solid fa-arrow-down text-2xl mb-2"></i>
-          <p>Select Pokémon and moves below to see damage calculations</p>
+
+      <!-- Dos columnas de resultados -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Mi Pokémon → Adversario -->
+        <div>
+          <h4 class="text-sm font-bold text-orange-700 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-right"></i> Mi Pokémon → Adversario
+          </h4>
+          <div id="results-my-to-opp" class="space-y-3">
+            <p class="text-sm text-slate-400 text-center py-4">Espera datos...</p>
+          </div>
+        </div>
+
+        <!-- Adversario → Mi Pokémon -->
+        <div>
+          <h4 class="text-sm font-bold text-blue-700 mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-arrow-left"></i> Adversario → Mi Pokémon
+          </h4>
+          <div id="results-opp-to-my" class="space-y-3">
+            <p class="text-sm text-slate-400 text-center py-4">Espera datos...</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Grid principal -->
+    <!-- ==================== GRID PRINCIPAL ==================== -->
     <div class="grid lg:grid-cols-3 gap-5">
 
-      <!-- ==================== ATTACKER ==================== -->
+      <!-- ========== MI POKÉMON (izquierda) ========== -->
       <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
         <div class="bg-orange-50 px-5 py-3 border-b border-orange-100 flex items-center justify-between">
           <h3 class="font-nunito font-bold text-orange-800">
-            <i class="fa-solid fa-sword mr-2"></i>Attacker
+            <i class="fa-solid fa-user mr-2"></i>Mi Pokémon
           </h3>
-          <span class="text-xs bg-orange-200 text-orange-800 px-2 py-0.5 rounded-full font-medium">Pokémon 1</span>
         </div>
 
         <div class="p-5 space-y-4">
           <!-- Species -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Species</label>
-            <input type="text" id="p1-species" placeholder="e.g. Flutter Mane"
+            <input type="text" id="my-species" placeholder="e.g. Gholdengo"
                    class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
           </div>
 
-          <!-- Level -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Level</label>
-            <input type="number" id="p1-level" value="50" readonly
-                   class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500" />
-          </div>
 
           <!-- Nature / Ability / Item -->
           <div class="space-y-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature (Stat Alignment)</label>
-              <select id="p1-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature</label>
+              <select id="my-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
                 <option value="Serious" selected>Serious</option>
                 <option value="Adamant">Adamant (+Atk -SpA)</option>
                 <option value="Modest">Modest (+SpA -Atk)</option>
@@ -142,66 +141,66 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Ability</label>
-              <input type="text" id="p1-ability" placeholder="e.g. Protosynthesis"
+              <input type="text" id="my-ability" placeholder="e.g. Good as Gold"
                      class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Item</label>
-              <input type="text" id="p1-item" placeholder="e.g. Choice Specs"
+              <input type="text" id="my-item" placeholder="e.g. Life Orb"
                      class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
             </div>
           </div>
 
-          <!-- Stat Points + Sliders -->
+          <!-- Stat Points -->
           <div>
             <div class="flex items-center justify-between mb-3">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Stat Points (SP)</label>
-              <span id="p1-sp-remaining" class="text-xs font-bold text-orange-600">0 / 66</span>
+              <span id="my-sp-remaining" class="text-xs font-bold text-orange-600">0 / 66</span>
             </div>
-
-            <div class="space-y-3">
+            <div class="space-y-3" id="my-sp-controls">
+              <!-- Se generan por JS o se dejan estáticos -->
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">HP</span>
-                <input type="range" id="p1-sp-hp-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="hp">
-                <input type="number" id="p1-sp-hp" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="hp">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 sp-slider" data-side="my" data-stat="hp">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="my" data-stat="hp">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">Atk</span>
-                <input type="range" id="p1-sp-atk-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="atk">
-                <input type="number" id="p1-sp-atk" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="atk">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 sp-slider" data-side="my" data-stat="atk">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="my" data-stat="atk">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">Def</span>
-                <input type="range" id="p1-sp-def-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="def">
-                <input type="number" id="p1-sp-def" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="def">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 sp-slider" data-side="my" data-stat="def">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="my" data-stat="def">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">SpA</span>
-                <input type="range" id="p1-sp-spa-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="spa">
-                <input type="number" id="p1-sp-spa" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="spa">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 sp-slider" data-side="my" data-stat="spa">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="my" data-stat="spa">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">SpD</span>
-                <input type="range" id="p1-sp-spd-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="spd">
-                <input type="number" id="p1-sp-spd" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="spd">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 sp-slider" data-side="my" data-stat="spd">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="my" data-stat="spd">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">Spe</span>
-                <input type="range" id="p1-sp-spe-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500" data-side="p1" data-stat="spe">
-                <input type="number" id="p1-sp-spe" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p1" data-stat="spe">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 sp-slider" data-side="my" data-stat="spe">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="my" data-stat="spe">
               </div>
             </div>
 
             <!-- Final Stats -->
             <div class="mt-4 pt-3 border-t border-slate-100">
-              <p class="text-xs text-slate-400 mb-1.5">Final Stats (Lv.50 · IV 31)</p>
-              <div class="grid grid-cols-6 gap-1 text-center text-xs font-medium text-slate-700">
-                <div><span id="p1-final-hp" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">HP</span></div>
-                <div><span id="p1-final-atk" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Atk</span></div>
-                <div><span id="p1-final-def" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Def</span></div>
-                <div><span id="p1-final-spa" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpA</span></div>
-                <div><span id="p1-final-spd" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpD</span></div>
-                <div><span id="p1-final-spe" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Spe</span></div>
+              <p class="text-xs text-slate-400 mb-1.5">Final Stats</p>
+              <div class="grid grid-cols-6 gap-1 text-center text-xs font-medium text-slate-700" id="my-final-stats">
+                <div><span data-stat="hp" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">HP</span></div>
+                <div><span data-stat="atk" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Atk</span></div>
+                <div><span data-stat="def" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Def</span></div>
+                <div><span data-stat="spa" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpA</span></div>
+                <div><span data-stat="spd" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpD</span></div>
+                <div><span data-stat="spe" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Spe</span></div>
               </div>
             </div>
           </div>
@@ -210,96 +209,139 @@
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Moves</label>
             <div class="space-y-2">
-              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 1" data-side="p1" data-slot="0" />
-              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 2" data-side="p1" data-slot="1" />
-              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 3" data-side="p1" data-slot="2" />
-              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 4" data-side="p1" data-slot="3" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 1" data-side="my" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 2" data-side="my" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 3" data-side="my" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 4" data-side="my" />
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ==================== FIELD ==================== -->
+      <!-- ========== FIELD (centro) ========== -->
       <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
         <div class="bg-slate-100 px-5 py-3 border-b border-slate-200">
           <h3 class="font-nunito font-bold text-slate-700">
             <i class="fa-solid fa-cloud-sun mr-2"></i>Field
           </h3>
         </div>
+
         <div class="p-5 space-y-5">
+          <!-- Format -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Format</label>
             <div class="flex gap-2">
-              <button class="field-btn active flex-1 py-2 rounded-xl text-sm font-medium border border-orange-300 bg-orange-50 text-orange-700" data-value="doubles">Doubles</button>
-              <button class="field-btn flex-1 py-2 rounded-xl text-sm font-medium border border-slate-200 bg-white text-slate-600 hover:bg-slate-50" data-value="singles">Singles</button>
+              <button class="field-btn active flex-1 py-2 rounded-xl text-sm font-medium border" data-value="doubles">Doubles</button>
+              <button class="field-btn flex-1 py-2 rounded-xl text-sm font-medium border" data-value="singles">Singles</button>
             </div>
           </div>
+
+          <!-- Weather -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Weather</label>
             <div class="grid grid-cols-3 gap-2">
-              <button class="field-btn active py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white" data-group="weather" data-value="none">None</button>
-              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Sun">Sun</button>
-              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Rain">Rain</button>
-              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Sand">Sand</button>
-              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="weather" data-value="Snow">Snow</button>
+              <button class="field-btn active py-2 rounded-xl text-xs font-medium border" data-group="weather" data-value="none">None</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border" data-group="weather" data-value="Sun">Sun</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border" data-group="weather" data-value="Rain">Rain</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border" data-group="weather" data-value="Sand">Sand</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border" data-group="weather" data-value="Snow">Snow</button>
             </div>
           </div>
+
+          <!-- Terrain -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Terrain</label>
             <div class="grid grid-cols-2 gap-2">
-              <button class="field-btn active py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white" data-group="terrain" data-value="none">None</button>
-              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Electric">Electric</button>
-              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Grassy">Grassy</button>
-              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Psychic">Psychic</button>
-              <button class="field-btn py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-slate-50" data-group="terrain" data-value="Misty">Misty</button>
+              <button class="field-btn active py-2 rounded-xl text-xs font-medium border" data-group="terrain" data-value="none">None</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border" data-group="terrain" data-value="Electric">Electric</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border" data-group="terrain" data-value="Grassy">Grassy</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border" data-group="terrain" data-value="Psychic">Psychic</button>
+              <button class="field-btn py-2 rounded-xl text-xs font-medium border" data-group="terrain" data-value="Misty">Misty</button>
             </div>
           </div>
+
+          <!-- Side-specific effects -->
           <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Common Effects</label>
-            <div class="flex flex-wrap gap-2">
-              <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
-                <input type="checkbox" id="field-helping-hand" class="rounded text-orange-500" /> Helping Hand
-              </label>
-              <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
-                <input type="checkbox" id="field-friend-guard" class="rounded text-orange-500" /> Friend Guard
-              </label>
-              <label class="inline-flex items-center gap-1.5 text-sm bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200 cursor-pointer hover:bg-slate-100">
-                <input type="checkbox" id="field-protect" class="rounded text-orange-500" /> Protect
-              </label>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Efectos por lado</label>
+            
+            <div class="space-y-3 text-sm">
+              <!-- Helping Hand -->
+              <div class="flex items-center justify-between">
+                <span>Helping Hand</span>
+                <div class="flex gap-3">
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="my-helping-hand" class="rounded text-orange-500"> Mi lado
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="opp-helping-hand" class="rounded text-blue-500"> Adv.
+                  </label>
+                </div>
+              </div>
+
+              <!-- Reflect -->
+              <div class="flex items-center justify-between">
+                <span>Reflect</span>
+                <div class="flex gap-3">
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="my-reflect" class="rounded text-orange-500"> Mi lado
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="opp-reflect" class="rounded text-blue-500"> Adv.
+                  </label>
+                </div>
+              </div>
+
+              <!-- Light Screen -->
+              <div class="flex items-center justify-between">
+                <span>Light Screen</span>
+                <div class="flex gap-3">
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="my-lightscreen" class="rounded text-orange-500"> Mi lado
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="opp-lightscreen" class="rounded text-blue-500"> Adv.
+                  </label>
+                </div>
+              </div>
+
+              <!-- Friend Guard -->
+              <div class="flex items-center justify-between">
+                <span>Friend Guard</span>
+                <div class="flex gap-3">
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="my-friendguard" class="rounded text-orange-500"> Mi lado
+                  </label>
+                  <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" id="opp-friendguard" class="rounded text-blue-500"> Adv.
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ==================== DEFENDER ==================== -->
-      <section class="bg-white rounded-2xl shadow-sm border border-orange-100 overflow-hidden">
+      <!-- ========== ADVERSARIO (derecha) ========== -->
+      <section class="bg-white rounded-2xl shadow-sm border border-blue-100 overflow-hidden">
         <div class="bg-blue-50 px-5 py-3 border-b border-blue-100 flex items-center justify-between">
           <h3 class="font-nunito font-bold text-blue-800">
-            <i class="fa-solid fa-shield-halved mr-2"></i>Defender
+            <i class="fa-solid fa-skull mr-2"></i>Adversario
           </h3>
-          <span class="text-xs bg-blue-200 text-blue-800 px-2 py-0.5 rounded-full font-medium">Pokémon 2</span>
         </div>
 
         <div class="p-5 space-y-4">
           <!-- Species -->
           <div>
             <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Species</label>
-            <input type="text" id="p2-species" placeholder="e.g. Incineroar"
+            <input type="text" id="opp-species" placeholder="e.g. Gengar"
                    class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
-          </div>
-
-          <!-- Level -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Level</label>
-            <input type="number" id="p2-level" value="50" readonly
-                   class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50 text-slate-500" />
           </div>
 
           <!-- Nature / Ability / Item -->
           <div class="space-y-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature (Stat Alignment)</label>
-              <select id="p2-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature</label>
+              <select id="opp-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
                 <option value="Serious" selected>Serious</option>
                 <option value="Adamant">Adamant (+Atk -SpA)</option>
                 <option value="Modest">Modest (+SpA -Atk)</option>
@@ -313,67 +355,77 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Ability</label>
-              <input type="text" id="p2-ability" placeholder="e.g. Intimidate"
+              <input type="text" id="opp-ability" placeholder="e.g. Cursed Body"
                      class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Item</label>
-              <input type="text" id="p2-item" placeholder="e.g. Safety Goggles"
+              <input type="text" id="opp-item" placeholder="e.g. Focus Sash"
                      class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
             </div>
           </div>
 
-          <!-- Stat Points + Sliders -->
+          <!-- Stat Points -->
           <div>
             <div class="flex items-center justify-between mb-3">
               <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Stat Points (SP)</label>
-              <span id="p2-sp-remaining" class="text-xs font-bold text-blue-600">0 / 66</span>
+              <span id="opp-sp-remaining" class="text-xs font-bold text-blue-600">0 / 66</span>
             </div>
-
             <div class="space-y-3">
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">HP</span>
-                <input type="range" id="p2-sp-hp-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="hp">
-                <input type="number" id="p2-sp-hp" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="hp">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500 sp-slider" data-side="opp" data-stat="hp">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="opp" data-stat="hp">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">Atk</span>
-                <input type="range" id="p2-sp-atk-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="atk">
-                <input type="number" id="p2-sp-atk" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="atk">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500 sp-slider" data-side="opp" data-stat="atk">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="opp" data-stat="atk">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">Def</span>
-                <input type="range" id="p2-sp-def-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="def">
-                <input type="number" id="p2-sp-def" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="def">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500 sp-slider" data-side="opp" data-stat="def">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="opp" data-stat="def">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">SpA</span>
-                <input type="range" id="p2-sp-spa-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="spa">
-                <input type="number" id="p2-sp-spa" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="spa">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500 sp-slider" data-side="opp" data-stat="spa">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="opp" data-stat="spa">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">SpD</span>
-                <input type="range" id="p2-sp-spd-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="spd">
-                <input type="number" id="p2-sp-spd" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="spd">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500 sp-slider" data-side="opp" data-stat="spd">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="opp" data-stat="spd">
               </div>
               <div class="flex items-center gap-3">
                 <span class="w-8 text-xs text-slate-500 font-medium">Spe</span>
-                <input type="range" id="p2-sp-spe-slider" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500" data-side="p2" data-stat="spe">
-                <input type="number" id="p2-sp-spe" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="p2" data-stat="spe">
+                <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-blue-500 sp-slider" data-side="opp" data-stat="spe">
+                <input type="number" value="0" min="0" max="32" class="sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-side="opp" data-stat="spe">
               </div>
             </div>
 
             <!-- Final Stats -->
             <div class="mt-4 pt-3 border-t border-slate-100">
-              <p class="text-xs text-slate-400 mb-1.5">Final Stats (Lv.50 · IV 31)</p>
-              <div class="grid grid-cols-6 gap-1 text-center text-xs font-medium text-slate-700">
-                <div><span id="p2-final-hp" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">HP</span></div>
-                <div><span id="p2-final-atk" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Atk</span></div>
-                <div><span id="p2-final-def" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Def</span></div>
-                <div><span id="p2-final-spa" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpA</span></div>
-                <div><span id="p2-final-spd" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpD</span></div>
-                <div><span id="p2-final-spe" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Spe</span></div>
+              <p class="text-xs text-slate-400 mb-1.5">Final Stats</p>
+              <div class="grid grid-cols-6 gap-1 text-center text-xs font-medium text-slate-700" id="opp-final-stats">
+                <div><span data-stat="hp" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">HP</span></div>
+                <div><span data-stat="atk" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Atk</span></div>
+                <div><span data-stat="def" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Def</span></div>
+                <div><span data-stat="spa" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpA</span></div>
+                <div><span data-stat="spd" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">SpD</span></div>
+                <div><span data-stat="spe" class="block font-bold">—</span><span class="text-slate-400 text-[10px]">Spe</span></div>
               </div>
+            </div>
+          </div>
+
+          <!-- Moves -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Moves</label>
+            <div class="space-y-2">
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 1" data-side="opp" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 2" data-side="opp" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 3" data-side="opp" />
+              <input type="text" class="move-input w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 4" data-side="opp" />
             </div>
           </div>
         </div>
@@ -381,8 +433,7 @@
     </div>
 
     <div class="mt-8 text-center text-sm text-slate-500 bg-white/60 rounded-2xl py-4 border border-dashed border-orange-200">
-      <i class="fa-solid fa-check-circle mr-1.5 text-green-500"></i>
-      Stat Points + barras + items funcionando. Próximo paso: autocompletado de sets.
+      Calculadora bilateral · Daño ofensivo + defensivo al mismo tiempo
     </div>
   </main>
 
@@ -390,7 +441,7 @@
     <p>Calculadora · Pokémon Champions Tools</p>
   </footer>
 
-  <!-- Smogon Calc -->
+  <!-- Librería Smogon -->
   <script src="https://unpkg.com/@smogon/calc@0.12.0/dist/data/production.min.js"></script>
   <script src="https://unpkg.com/@smogon/calc@0.12.0/dist/production.min.js"></script>
 
