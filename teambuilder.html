@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Teambuilder · Pokémon Champions</title>
-  <meta name="description" content="Teambuilder visual e intuitivo para Pokémon Champions (VGC)." />
+  <meta name="description" content="Teambuilder para Pokémon Champions. Construye, analiza y guarda tus equipos." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,20 +18,6 @@
           fontFamily: {
             nunito: ['Nunito', 'sans-serif'],
             quicksand: ['Quicksand', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50:  '#fff7ed',
-              100: '#ffedd5',
-              200: '#fed7aa',
-              300: '#fdba74',
-              400: '#fb923c',
-              500: '#f97316',
-              600: '#ea580c',
-              700: '#c2410c',
-              800: '#9a3412',
-              900: '#7c2d12',
-            }
           }
         }
       }
@@ -43,7 +29,7 @@
 </head>
 <body class="bg-amber-50/60 text-slate-800 font-quicksand antialiased min-h-screen">
 
-  <!-- Header / Nav -->
+  <!-- Header -->
   <header class="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white shadow-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
       <a href="index.html" class="flex items-center gap-3 group">
@@ -72,118 +58,197 @@
 
   <main class="max-w-7xl mx-auto px-4 py-6">
 
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <!-- Título + Acciones -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
-        <h2 class="font-nunito font-extrabold text-2xl sm:text-3xl text-slate-800">
-          Teambuilder
-        </h2>
-        <p class="text-slate-600 text-sm mt-1">
-          Construye tu equipo de 6 Pokémon · En desarrollo
-        </p>
+        <h2 class="font-nunito font-extrabold text-2xl sm:text-3xl text-slate-800">Teambuilder</h2>
+        <p class="text-slate-600 text-sm mt-1">Construye y analiza tu equipo de Champions</p>
       </div>
-      <div class="flex gap-2">
-        <button class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50 transition">
+
+      <div class="flex flex-wrap gap-2">
+        <button id="btn-import" class="px-4 py-2 bg-white border border-orange-200 text-orange-700 rounded-xl text-sm font-semibold hover:bg-orange-50 transition">
           <i class="fa-solid fa-file-import mr-1.5"></i>Importar
         </button>
-        <button class="px-4 py-2 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition">
+        <button id="btn-export" class="px-4 py-2 bg-white border border-orange-200 text-orange-700 rounded-xl text-sm font-semibold hover:bg-orange-50 transition">
           <i class="fa-solid fa-file-export mr-1.5"></i>Exportar
         </button>
-      </div>
-    </div>
-
-    <!-- Grid de 6 slots de equipo -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-      <!-- Slot 1 -->
-      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="0">
-        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
-          <i class="fa-solid fa-plus"></i>
-        </div>
-        <span class="text-sm font-medium text-slate-500">Slot 1</span>
-        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
-      </div>
-
-      <!-- Slot 2 -->
-      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="1">
-        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
-          <i class="fa-solid fa-plus"></i>
-        </div>
-        <span class="text-sm font-medium text-slate-500">Slot 2</span>
-        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
-      </div>
-
-      <!-- Slot 3 -->
-      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="2">
-        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
-          <i class="fa-solid fa-plus"></i>
-        </div>
-        <span class="text-sm font-medium text-slate-500">Slot 3</span>
-        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
-      </div>
-
-      <!-- Slot 4 -->
-      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="3">
-        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
-          <i class="fa-solid fa-plus"></i>
-        </div>
-        <span class="text-sm font-medium text-slate-500">Slot 4</span>
-        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
-      </div>
-
-      <!-- Slot 5 -->
-      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="4">
-        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
-          <i class="fa-solid fa-plus"></i>
-        </div>
-        <span class="text-sm font-medium text-slate-500">Slot 5</span>
-        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
-      </div>
-
-      <!-- Slot 6 -->
-      <div class="team-slot bg-white rounded-2xl border-2 border-dashed border-orange-200 p-4 flex flex-col items-center justify-center min-h-[180px] hover:border-orange-400 hover:bg-orange-50/50 transition cursor-pointer group" data-slot="5">
-        <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-2xl text-orange-400 mb-3 group-hover:scale-110 transition">
-          <i class="fa-solid fa-plus"></i>
-        </div>
-        <span class="text-sm font-medium text-slate-500">Slot 6</span>
-        <span class="text-xs text-slate-400 mt-1">Añadir Pokémon</span>
-      </div>
-    </div>
-
-    <!-- Panel de información / futuros análisis -->
-    <div class="grid lg:grid-cols-3 gap-5">
-      <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-        <h3 class="font-nunito font-bold text-lg text-slate-700 mb-4">
-          <i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i>
-          Resumen del equipo
-        </h3>
-        <div class="text-slate-500 text-sm py-8 text-center">
-          Añade Pokémon para ver tipings, speed tiers, vulnerabilidades y sinergias.
-        </div>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
-        <h3 class="font-nunito font-bold text-lg text-slate-700 mb-4">
-          <i class="fa-solid fa-link text-orange-500 mr-2"></i>
-          Conexión con Calc
-        </h3>
-        <p class="text-sm text-slate-600 mb-4">
-          Más adelante podrás enviar cualquier Pokémon del equipo directamente a la calculadora de daños.
-        </p>
-        <button disabled class="w-full py-2.5 bg-slate-100 text-slate-400 rounded-xl text-sm font-medium cursor-not-allowed">
-          Enviar a Calculadora (próximamente)
+        <button id="btn-clear" class="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50 transition">
+          <i class="fa-solid fa-trash mr-1.5"></i>Limpiar
         </button>
       </div>
     </div>
 
-    <!-- Nota de desarrollo -->
-    <div class="mt-8 text-center text-sm text-slate-500 bg-white/60 rounded-2xl py-4 border border-dashed border-orange-200">
-      <i class="fa-solid fa-flask mr-1.5 text-orange-400"></i>
-      Esqueleto básico del Teambuilder. La selección de Pokémon, sets y análisis se construirán paso a paso.
+    <!-- ==================== EQUIPO (6 SLOTS) ==================== -->
+    <section class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 mb-6">
+      <h3 class="font-nunito font-bold text-lg text-slate-700 mb-4">
+        <i class="fa-solid fa-users text-orange-500 mr-2"></i>Tu Equipo
+      </h3>
+
+      <div id="team-slots" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- Los 6 slots se generan con JavaScript -->
+      </div>
+    </section>
+
+    <!-- ==================== EDITOR DE POKÉMON ==================== -->
+    <section id="pokemon-editor" class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 mb-6 hidden">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="font-nunito font-bold text-lg text-slate-700">
+          <i class="fa-solid fa-pen-to-square text-orange-500 mr-2"></i>
+          Editando: <span id="editing-slot-label">Slot 1</span>
+        </h3>
+        <button id="btn-close-editor" class="text-slate-400 hover:text-slate-600 text-xl">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+        <!-- Columna izquierda -->
+        <div class="space-y-4">
+          <!-- Species + Sprite -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Species</label>
+            <div class="flex items-center gap-2">
+              <img id="edit-sprite" src="" alt="" class="w-12 h-12 object-contain bg-slate-100 rounded-lg border border-slate-200 hidden">
+              <input type="text" id="edit-species" placeholder="Buscar Pokémon o set..."
+                     class="flex-1 border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Nature</label>
+              <select id="edit-nature" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm">
+                <option value="Serious" selected>Serious</option>
+                <option value="Adamant">Adamant (+Atk -SpA)</option>
+                <option value="Modest">Modest (+SpA -Atk)</option>
+                <option value="Jolly">Jolly (+Spe -SpA)</option>
+                <option value="Timid">Timid (+Spe -Atk)</option>
+                <option value="Bold">Bold (+Def -Atk)</option>
+                <option value="Calm">Calm (+SpD -Atk)</option>
+                <option value="Impish">Impish (+Def -SpA)</option>
+                <option value="Careful">Careful (+SpD -SpA)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Ability</label>
+              <input type="text" id="edit-ability" placeholder="Ability"
+                     class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wide">Item</label>
+            <input type="text" id="edit-item" placeholder="Item"
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
+          </div>
+
+          <!-- Moves -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">Moves</label>
+            <div class="space-y-2">
+              <input type="text" id="edit-move1" class="edit-move w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 1" />
+              <input type="text" id="edit-move2" class="edit-move w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 2" />
+              <input type="text" id="edit-move3" class="edit-move w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 3" />
+              <input type="text" id="edit-move4" class="edit-move w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" placeholder="Move 4" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna derecha - Stat Points -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Stat Points (SP)</label>
+            <span id="edit-sp-remaining" class="text-xs font-bold text-orange-600">0 / 66</span>
+          </div>
+
+          <div class="space-y-3" id="edit-sp-controls">
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-xs text-slate-500 font-medium">HP</span>
+              <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 edit-sp-slider" data-stat="hp">
+              <input type="number" value="0" min="0" max="32" class="edit-sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-stat="hp">
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-xs text-slate-500 font-medium">Atk</span>
+              <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 edit-sp-slider" data-stat="atk">
+              <input type="number" value="0" min="0" max="32" class="edit-sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-stat="atk">
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-xs text-slate-500 font-medium">Def</span>
+              <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 edit-sp-slider" data-stat="def">
+              <input type="number" value="0" min="0" max="32" class="edit-sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-stat="def">
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-xs text-slate-500 font-medium">SpA</span>
+              <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 edit-sp-slider" data-stat="spa">
+              <input type="number" value="0" min="0" max="32" class="edit-sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-stat="spa">
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-xs text-slate-500 font-medium">SpD</span>
+              <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 edit-sp-slider" data-stat="spd">
+              <input type="number" value="0" min="0" max="32" class="edit-sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-stat="spd">
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-xs text-slate-500 font-medium">Spe</span>
+              <input type="range" min="0" max="32" value="0" class="flex-1 h-2 accent-orange-500 edit-sp-slider" data-stat="spe">
+              <input type="number" value="0" min="0" max="32" class="edit-sp-input w-14 border border-slate-200 rounded-lg px-1 py-1 text-sm text-center" data-stat="spe">
+            </div>
+          </div>
+
+          <div class="mt-6 flex gap-3">
+            <button id="btn-save-pokemon" class="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition">
+              <i class="fa-solid fa-check mr-1.5"></i>Guardar
+            </button>
+            <button id="btn-remove-pokemon" class="px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-semibold transition">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ANÁLISIS (placeholder) ==================== -->
+    <section class="bg-white rounded-2xl shadow-sm border border-orange-100 p-5 mb-6">
+      <h3 class="font-nunito font-bold text-lg text-slate-700 mb-4">
+        <i class="fa-solid fa-chart-pie text-orange-500 mr-2"></i>Análisis del Equipo
+      </h3>
+      <div id="team-analysis" class="text-slate-500 text-sm">
+        <p class="text-center py-8 text-slate-400">
+          Agrega Pokémon a tu equipo para ver el análisis de resistencias, cobertura y speed control.
+        </p>
+      </div>
+    </section>
+
+    <!-- ==================== IMPORT MODAL ==================== -->
+    <div id="import-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-nunito font-bold text-lg">Importar equipo (Showdown)</h3>
+          <button id="btn-close-import" class="text-slate-400 hover:text-slate-600 text-xl">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <textarea id="import-text" rows="12" 
+                  class="w-full border border-slate-200 rounded-xl p-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  placeholder="Pega aquí el equipo en formato Showdown..."></textarea>
+        <div class="mt-4 flex justify-end gap-2">
+          <button id="btn-cancel-import" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl">Cancelar</button>
+          <button id="btn-confirm-import" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold">
+            Importar
+          </button>
+        </div>
+      </div>
     </div>
+
   </main>
 
   <footer class="border-t border-orange-100 mt-12 py-6 text-center text-sm text-slate-500">
     <p>Teambuilder · Pokémon Champions Tools</p>
   </footer>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/@smogon/calc@0.12.0/dist/data/production.min.js"></script>
+  <script src="https://unpkg.com/@smogon/calc@0.12.0/dist/production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/smogon/damage-calc@master/src/js/data/sets/champions.js"></script>
 
   <script src="js/common.js"></script>
   <script src="js/teambuilder.js"></script>
