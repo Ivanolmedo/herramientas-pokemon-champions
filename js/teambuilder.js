@@ -1,13 +1,13 @@
 /**
- * teambuilder.js - Versión corregida
- * - Importación correcta de EVs → Stat Points
- * - Análisis de tipos funcional desde el primer Pokémon
- * - Autocompletado de sets + blank
- * - Barras de SP sincronizadas
+ * teambuilder.js - Versión final actual
+ * - Sin conversión EVs/SP (números directos)
+ * - Aviso si > 66 SP
+ * - Análisis defensivo con balance neto
+ * - Cobertura ofensiva + Speed Control
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c[Teambuilder] Versión corregida iniciada', 'color: #ea580c; font-weight: bold;');
+  console.log('%c[Teambuilder] Cargado', 'color: #ea580c; font-weight: bold;');
 
   // ======================================================
   // ESTADO
@@ -22,18 +22,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return (text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
   }
 
-  function spToEVs(sp) {
+  function validateSP(sp) {
     sp = Number(sp) || 0;
-    if (sp <= 0) return 0;
-    if (sp >= 32) return 252;
-    return 4 + (sp - 1) * 8;
+    if (sp < 0) return 0;
+    if (sp > 32) return 32;
+    return sp;
   }
 
-  function evsToSP(ev) {
-    ev = Number(ev) || 0;
-    if (ev <= 0) return 0;
-    if (ev >= 252) return 32;
-    return Math.min(32, 1 + Math.floor((ev - 4) / 8));
+  function checkSPLimit(poke, slotIndex) {
+    if (!poke || !poke.sps) return;
+    const total = Object.values(poke.sps).reduce((sum, v) => sum + (Number(v) || 0), 0);
+    if (total > 66) {
+      alert(`⚠️ Slot ${slotIndex + 1} (${poke.species}) tiene ${total} Stat Points.\nEl máximo es 66. Revisa la distribución.`);
+    }
   }
 
   // ======================================================
@@ -138,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sps = {};
     ['hp', 'atk', 'def', 'spa', 'spd', 'spe'].forEach(stat => {
       const input = document.querySelector(`.edit-sp-input[data-stat="${stat}"]`);
-      sps[stat] = Number(input?.value) || 0;
+      sps[stat] = validateSP(input?.value);
     });
 
     const species = document.getElementById('edit-species').value.trim();
@@ -161,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     };
 
+    checkSPLimit(team[currentEditingSlot], currentEditingSlot);
     renderTeamSlots();
     updateTypeAnalysis();
     closeEditor();
@@ -173,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.edit-sp-slider, .edit-sp-input').forEach(el => {
       el.addEventListener('input', function () {
         const stat = this.dataset.stat;
-        let value = Math.max(0, Math.min(32, Number(this.value) || 0));
+        let value = validateSP(this.value);
 
         const slider = document.querySelector(`.edit-sp-slider[data-stat="${stat}"]`);
         const input  = document.querySelector(`.edit-sp-input[data-stat="${stat}"]`);
@@ -219,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ======================================================
-  // AUTOCOMPLETADO DE SETS + BLANK
+  // AUTOCOMPLETADO
   // ======================================================
   function setupSetsAutocomplete() {
     if (typeof SETDEX_CHAMPIONS === 'undefined' || typeof calc === 'undefined') {
@@ -370,8 +372,9 @@ document.addEventListener('DOMContentLoaded', () => {
       for (const [key, value] of Object.entries(setData.sps)) {
         const stat = keyMap[key];
         if (!stat) continue;
-        document.querySelector(`.edit-sp-slider[data-stat="${stat}"]`).value = value;
-        document.querySelector(`.edit-sp-input[data-stat="${stat}"]`).value = value;
+        const val = validateSP(value);
+        document.querySelector(`.edit-sp-slider[data-stat="${stat}"]`).value = val;
+        document.querySelector(`.edit-sp-input[data-stat="${stat}"]`).value = val;
       }
       updateEditSPCounter();
     }
@@ -387,168 +390,262 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ======================================================
-  // ANÁLISIS DE TIPOS (corregido)
+  // ANÁLISIS COMPLETO
   // ======================================================
   function updateTypeAnalysis() {
-  const container = document.getElementById('team-analysis');
-  if (!container) return;
+    const container = document.getElementById('team-analysis');
+    if (!container) return;
 
-  const activePokes = team.filter(p => p && p.species);
-  if (activePokes.length === 0) {
-    container.innerHTML = `<p class="text-center py-8 text-slate-400">Agrega Pokémon a tu equipo para ver el análisis de tipos.</p>`;
-    return;
-  }
-
-  // ========== TABLA DE TIPOS GEN 9 (hardcodeada - fiable) ==========
-  // 0 = inmune, 0.5 = resistido, 1 = neutral, 2 = super efectivo
-  const TYPE_CHART = {
-    Normal:   { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:2, Poison:1, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:1, Ghost:0, Dragon:1, Dark:1, Steel:1, Fairy:1 },
-    Fire:     { Normal:1, Fire:0.5, Water:2, Electric:1, Grass:0.5, Ice:0.5, Fighting:1, Poison:1, Ground:2, Flying:1, Psychic:1, Bug:0.5, Rock:2, Ghost:1, Dragon:1, Dark:1, Steel:0.5, Fairy:0.5 },
-    Water:    { Normal:1, Fire:0.5, Water:0.5, Electric:2, Grass:2, Ice:0.5, Fighting:1, Poison:1, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:0.5, Fairy:1 },
-    Electric: { Normal:1, Fire:1, Water:1, Electric:0.5, Grass:1, Ice:1, Fighting:1, Poison:1, Ground:2, Flying:0.5, Psychic:1, Bug:1, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:0.5, Fairy:1 },
-    Grass:    { Normal:1, Fire:2, Water:0.5, Electric:0.5, Grass:0.5, Ice:2, Fighting:1, Poison:2, Ground:0.5, Flying:2, Psychic:1, Bug:2, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:1 },
-    Ice:      { Normal:1, Fire:2, Water:1, Electric:1, Grass:1, Ice:0.5, Fighting:2, Poison:1, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:2, Ghost:1, Dragon:1, Dark:1, Steel:2, Fairy:1 },
-    Fighting: { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:1, Poison:1, Ground:1, Flying:2, Psychic:2, Bug:0.5, Rock:0.5, Ghost:1, Dragon:1, Dark:0.5, Steel:1, Fairy:2 },
-    Poison:   { Normal:1, Fire:1, Water:1, Electric:1, Grass:0.5, Ice:1, Fighting:0.5, Poison:0.5, Ground:2, Flying:1, Psychic:2, Bug:0.5, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:0.5 },
-    Ground:   { Normal:1, Fire:1, Water:2, Electric:0, Grass:2, Ice:2, Fighting:1, Poison:0.5, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:0.5, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:1 },
-    Flying:   { Normal:1, Fire:1, Water:1, Electric:2, Grass:0.5, Ice:2, Fighting:0.5, Poison:1, Ground:0, Flying:1, Psychic:1, Bug:0.5, Rock:2, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:1 },
-    Psychic:  { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:0.5, Poison:1, Ground:1, Flying:1, Psychic:0.5, Bug:2, Rock:1, Ghost:2, Dragon:1, Dark:2, Steel:1, Fairy:1 },
-    Bug:      { Normal:1, Fire:2, Water:1, Electric:1, Grass:0.5, Ice:1, Fighting:0.5, Poison:1, Ground:0.5, Flying:2, Psychic:1, Bug:1, Rock:2, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:1 },
-    Rock:     { Normal:0.5, Fire:0.5, Water:2, Electric:1, Grass:2, Ice:1, Fighting:2, Poison:0.5, Ground:2, Flying:0.5, Psychic:1, Bug:1, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:2, Fairy:1 },
-    Ghost:    { Normal:0, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:0, Poison:0.5, Ground:1, Flying:1, Psychic:1, Bug:0.5, Rock:1, Ghost:2, Dragon:1, Dark:2, Steel:1, Fairy:1 },
-    Dragon:   { Normal:1, Fire:0.5, Water:0.5, Electric:0.5, Grass:0.5, Ice:2, Fighting:1, Poison:1, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:1, Ghost:1, Dragon:2, Dark:1, Steel:1, Fairy:2 },
-    Dark:     { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:2, Poison:1, Ground:1, Flying:1, Psychic:0, Bug:2, Rock:1, Ghost:0.5, Dragon:1, Dark:0.5, Steel:1, Fairy:2 },
-    Steel:    { Normal:0.5, Fire:2, Water:1, Electric:1, Grass:0.5, Ice:0.5, Fighting:2, Poison:0, Ground:2, Flying:0.5, Psychic:0.5, Bug:0.5, Rock:0.5, Ghost:1, Dragon:0.5, Dark:1, Steel:0.5, Fairy:0.5 },
-    Fairy:    { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:0.5, Poison:2, Ground:1, Flying:1, Psychic:1, Bug:0.5, Rock:1, Ghost:1, Dragon:0, Dark:0.5, Steel:2, Fairy:1 }
-  };
-
-  // Esta tabla es: TYPE_CHART[defendingType][attackingType]
-  // Ejemplo: TYPE_CHART['Fire']['Water'] = 2 (Fire es débil a Water)
-
-  const typesList = Object.keys(TYPE_CHART);
-
-  const weakCount = {};
-  const resistCount = {};
-  const immuneCount = {};
-
-  typesList.forEach(t => {
-    weakCount[t] = 0;
-    resistCount[t] = 0;
-    immuneCount[t] = 0;
-  });
-
-  // Necesitamos los tipos de cada Pokémon
-  // Como @smogon/calc a veces falla, usamos una forma más segura
-  function getPokemonTypes(speciesName) {
-    try {
-      if (typeof calc !== 'undefined') {
-        const gen = calc.Generations.get(9);
-        const species = gen.species.get(toID(speciesName));
-        if (species && species.types) return species.types;
-      }
-    } catch (e) {}
-    return null;
-  }
-
-  activePokes.forEach(poke => {
-    const defendTypes = getPokemonTypes(poke.species);
-    if (!defendTypes || defendTypes.length === 0) {
-      console.warn('No se pudieron obtener tipos de', poke.species);
+    const activePokes = team.filter(p => p && p.species);
+    if (activePokes.length === 0) {
+      container.innerHTML = `<p class="text-center py-8 text-slate-400">Agrega Pokémon a tu equipo para ver el análisis.</p>`;
       return;
     }
 
-    // Para cada tipo atacante, calculamos la efectividad combinada
-    typesList.forEach(attackType => {
-      let multiplier = 1;
+    // Tabla de tipos (TYPE_CHART[defendingType][attackingType])
+    const TYPE_CHART = {
+      Normal:   { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:2, Poison:1, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:1, Ghost:0, Dragon:1, Dark:1, Steel:1, Fairy:1 },
+      Fire:     { Normal:1, Fire:0.5, Water:2, Electric:1, Grass:0.5, Ice:0.5, Fighting:1, Poison:1, Ground:2, Flying:1, Psychic:1, Bug:0.5, Rock:2, Ghost:1, Dragon:1, Dark:1, Steel:0.5, Fairy:0.5 },
+      Water:    { Normal:1, Fire:0.5, Water:0.5, Electric:2, Grass:2, Ice:0.5, Fighting:1, Poison:1, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:0.5, Fairy:1 },
+      Electric: { Normal:1, Fire:1, Water:1, Electric:0.5, Grass:1, Ice:1, Fighting:1, Poison:1, Ground:2, Flying:0.5, Psychic:1, Bug:1, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:0.5, Fairy:1 },
+      Grass:    { Normal:1, Fire:2, Water:0.5, Electric:0.5, Grass:0.5, Ice:2, Fighting:1, Poison:2, Ground:0.5, Flying:2, Psychic:1, Bug:2, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:1 },
+      Ice:      { Normal:1, Fire:2, Water:1, Electric:1, Grass:1, Ice:0.5, Fighting:2, Poison:1, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:2, Ghost:1, Dragon:1, Dark:1, Steel:2, Fairy:1 },
+      Fighting: { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:1, Poison:1, Ground:1, Flying:2, Psychic:2, Bug:0.5, Rock:0.5, Ghost:1, Dragon:1, Dark:0.5, Steel:1, Fairy:2 },
+      Poison:   { Normal:1, Fire:1, Water:1, Electric:1, Grass:0.5, Ice:1, Fighting:0.5, Poison:0.5, Ground:2, Flying:1, Psychic:2, Bug:0.5, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:0.5 },
+      Ground:   { Normal:1, Fire:1, Water:2, Electric:0, Grass:2, Ice:2, Fighting:1, Poison:0.5, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:0.5, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:1 },
+      Flying:   { Normal:1, Fire:1, Water:1, Electric:2, Grass:0.5, Ice:2, Fighting:0.5, Poison:1, Ground:0, Flying:1, Psychic:1, Bug:0.5, Rock:2, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:1 },
+      Psychic:  { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:0.5, Poison:1, Ground:1, Flying:1, Psychic:0.5, Bug:2, Rock:1, Ghost:2, Dragon:1, Dark:2, Steel:1, Fairy:1 },
+      Bug:      { Normal:1, Fire:2, Water:1, Electric:1, Grass:0.5, Ice:1, Fighting:0.5, Poison:1, Ground:0.5, Flying:2, Psychic:1, Bug:1, Rock:2, Ghost:1, Dragon:1, Dark:1, Steel:1, Fairy:1 },
+      Rock:     { Normal:0.5, Fire:0.5, Water:2, Electric:1, Grass:2, Ice:1, Fighting:2, Poison:0.5, Ground:2, Flying:0.5, Psychic:1, Bug:1, Rock:1, Ghost:1, Dragon:1, Dark:1, Steel:2, Fairy:1 },
+      Ghost:    { Normal:0, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:0, Poison:0.5, Ground:1, Flying:1, Psychic:1, Bug:0.5, Rock:1, Ghost:2, Dragon:1, Dark:2, Steel:1, Fairy:1 },
+      Dragon:   { Normal:1, Fire:0.5, Water:0.5, Electric:0.5, Grass:0.5, Ice:2, Fighting:1, Poison:1, Ground:1, Flying:1, Psychic:1, Bug:1, Rock:1, Ghost:1, Dragon:2, Dark:1, Steel:1, Fairy:2 },
+      Dark:     { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:2, Poison:1, Ground:1, Flying:1, Psychic:0, Bug:2, Rock:1, Ghost:0.5, Dragon:1, Dark:0.5, Steel:1, Fairy:2 },
+      Steel:    { Normal:0.5, Fire:2, Water:1, Electric:1, Grass:0.5, Ice:0.5, Fighting:2, Poison:0, Ground:2, Flying:0.5, Psychic:0.5, Bug:0.5, Rock:0.5, Ghost:1, Dragon:0.5, Dark:1, Steel:0.5, Fairy:0.5 },
+      Fairy:    { Normal:1, Fire:1, Water:1, Electric:1, Grass:1, Ice:1, Fighting:0.5, Poison:2, Ground:1, Flying:1, Psychic:1, Bug:0.5, Rock:1, Ghost:1, Dragon:0, Dark:0.5, Steel:2, Fairy:1 }
+    };
 
-      defendTypes.forEach(defType => {
-        const chart = TYPE_CHART[defType];
-        if (chart && chart[attackType] !== undefined) {
-          multiplier *= chart[attackType];
-        }
-      });
+    const typesList = Object.keys(TYPE_CHART);
 
-      if (multiplier === 0) {
-        immuneCount[attackType]++;
-      } else if (multiplier >= 2) {
-        weakCount[attackType]++;
-      } else if (multiplier <= 0.5) {
-        resistCount[attackType]++;
-      }
+    // --- Defensive ---
+    const weakCount = {}, resistCount = {}, immuneCount = {};
+    typesList.forEach(t => {
+      weakCount[t] = 0;
+      resistCount[t] = 0;
+      immuneCount[t] = 0;
     });
-  });
 
-  // ===== Visualización =====
-  let html = `
-    <div class="mb-3">
-      <p class="text-sm text-slate-600">
-        Análisis con <strong>${activePokes.length}</strong> Pokémon
-      </p>
-    </div>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs">
-  `;
-
-  typesList.forEach(type => {
-    const w = weakCount[type];
-    const r = resistCount[type];
-    const i = immuneCount[type];
-
-    let bg = 'bg-slate-100 text-slate-700';
-    let text = 'Neutral';
-
-    if (w >= 3) {
-      bg = 'bg-red-100 text-red-800 border border-red-200';
-      text = `${w} débiles`;
-    } else if (w === 2) {
-      bg = 'bg-orange-100 text-orange-800 border border-orange-200';
-      text = `${w} débiles`;
-    } else if (w === 1) {
-      bg = 'bg-amber-50 text-amber-800 border border-amber-200';
-      text = `1 débil`;
-    } else if (i > 0) {
-      bg = 'bg-green-100 text-green-800 border border-green-200';
-      text = `${i} inmune`;
-    } else if (r >= 2) {
-      bg = 'bg-emerald-100 text-emerald-800 border border-emerald-200';
-      text = `${r} resisten`;
-    } else if (r === 1) {
-      bg = 'bg-emerald-50 text-emerald-700';
-      text = `1 resiste`;
+    function getPokemonTypes(speciesName) {
+      try {
+        if (typeof calc !== 'undefined') {
+          const gen = calc.Generations.get(9);
+          const species = gen.species.get(toID(speciesName));
+          if (species && species.types) return species.types;
+        }
+      } catch (e) {}
+      return null;
     }
 
-    html += `
-      <div class="rounded-xl px-2 py-2.5 text-center ${bg}">
-        <div class="font-bold">${type}</div>
-        <div class="text-[11px] mt-0.5 opacity-90">${text}</div>
-      </div>
-    `;
-  });
+    activePokes.forEach(poke => {
+      const defendTypes = getPokemonTypes(poke.species);
+      if (!defendTypes) return;
 
-  html += `</div>`;
+      typesList.forEach(attackType => {
+        let multiplier = 1;
+        defendTypes.forEach(defType => {
+          const chart = TYPE_CHART[defType];
+          if (chart && chart[attackType] !== undefined) {
+            multiplier *= chart[attackType];
+          }
+        });
 
-  // Alertas
-  const criticalWeak = typesList.filter(t => weakCount[t] >= 3);
-  const mediumWeak = typesList.filter(t => weakCount[t] === 2);
+        if (multiplier === 0) immuneCount[attackType]++;
+        else if (multiplier >= 2) weakCount[attackType]++;
+        else if (multiplier <= 0.5) resistCount[attackType]++;
+      });
+    });
 
-  if (criticalWeak.length > 0) {
-    html += `
-      <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
-        <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
-        <strong>Problema fuerte:</strong> 3 o más Pokémon débiles a 
-        <strong>${criticalWeak.join(', ')}</strong>
-      </div>
+    // Balance neto
+    const riskScore = {};
+    typesList.forEach(t => {
+      riskScore[t] = (weakCount[t] || 0) - (resistCount[t] || 0) - (immuneCount[t] || 0);
+    });
+
+    // --- Offensive Coverage ---
+    const coveredTypes = new Set();
+    const allMoves = [];
+
+    activePokes.forEach(poke => {
+      (poke.moves || []).forEach(moveName => {
+        if (!moveName) return;
+        allMoves.push(moveName);
+
+        try {
+          if (typeof calc !== 'undefined') {
+            const gen = calc.Generations.get(9);
+            const move = gen.moves.get(toID(moveName));
+            if (!move || !move.type) return;
+
+            const moveType = move.type;
+            typesList.forEach(defType => {
+              const chart = TYPE_CHART[defType];
+              if (chart && chart[moveType] >= 2) {
+                coveredTypes.add(defType);
+              }
+            });
+          }
+        } catch (e) {}
+      });
+    });
+
+    const uncoveredTypes = typesList.filter(t => !coveredTypes.has(t));
+
+    // --- Speed Control ---
+    const SPEED_CONTROL_MOVES = {
+      'Tailwind': 'Tailwind',
+      'Trick Room': 'Trick Room',
+      'Icy Wind': 'Icy Wind',
+      'Electroweb': 'Electroweb',
+      'Thunder Wave': 'Thunder Wave',
+      'Scary Face': 'Scary Face',
+      'String Shot': 'String Shot',
+      'Bulldoze': 'Bulldoze',
+      'Rock Tomb': 'Rock Tomb',
+      'Low Sweep': 'Low Sweep',
+      'Sticky Web': 'Sticky Web'
+    };
+
+    const foundSpeedControl = new Set();
+    allMoves.forEach(moveName => {
+      const clean = moveName.trim();
+      if (SPEED_CONTROL_MOVES[clean]) {
+        foundSpeedControl.add(SPEED_CONTROL_MOVES[clean]);
+      }
+    });
+
+    // ========== HTML ==========
+    let html = `
+      <div class="space-y-6">
+        <!-- DEFENSIVE -->
+        <div>
+          <h4 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-shield text-orange-500"></i> Perfil Defensivo
+          </h4>
+          <p class="text-xs text-slate-500 mb-3">
+            Balance neto: debilidades − resistencias/inmunidades (${activePokes.length} Pokémon)
+          </p>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs">
     `;
-  } else if (mediumWeak.length > 0) {
+
+    typesList.forEach(type => {
+      const score = riskScore[type];
+      let bg = 'bg-slate-100 text-slate-700';
+      let text = 'Equilibrado';
+
+      if (score >= 2) {
+        bg = 'bg-red-100 text-red-800 border border-red-200';
+        text = `Alta debilidad`;
+      } else if (score === 1) {
+        bg = 'bg-orange-100 text-orange-800 border border-orange-200';
+        text = `Ligeramente débil`;
+      } else if (score <= -2) {
+        bg = 'bg-green-100 text-green-800 border border-green-200';
+        text = `Muy resistente`;
+      } else if (score === -1) {
+        bg = 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+        text = `Resistente`;
+      }
+
+      html += `
+        <div class="rounded-xl px-2 py-2.5 text-center ${bg}">
+          <div class="font-bold">${type}</div>
+          <div class="text-[11px] mt-0.5 opacity-90">${text}</div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+
+    const highRisk = typesList.filter(t => riskScore[t] >= 2);
+    const lowRisk = typesList.filter(t => riskScore[t] === 1);
+
+    if (highRisk.length > 0) {
+      html += `
+        <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
+          <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
+          <strong>Alta debilidad</strong> a: <strong>${highRisk.join(', ')}</strong>
+        </div>
+      `;
+    }
+    if (lowRisk.length > 0) {
+      html += `
+        <div class="mt-2 p-3 bg-orange-50 border border-orange-200 rounded-xl text-sm text-orange-800">
+          <i class="fa-solid fa-circle-exclamation mr-1.5"></i>
+          Ligeramente débil a: <strong>${lowRisk.join(', ')}</strong>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+
+    // OFFENSIVE
     html += `
-      <div class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-xl text-sm text-orange-800">
-        <i class="fa-solid fa-circle-exclamation mr-1.5"></i>
-        Tienes 2 Pokémon débiles a: <strong>${mediumWeak.join(', ')}</strong>
-      </div>
+      <div>
+        <h4 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-crosshairs text-orange-500"></i> Cobertura Ofensiva
+        </h4>
     `;
+
+    if (uncoveredTypes.length === 0) {
+      html += `
+        <div class="p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800">
+          <i class="fa-solid fa-check mr-1.5"></i>
+          El equipo tiene super efectivo contra <strong>todos</strong> los tipos.
+        </div>
+      `;
+    } else {
+      html += `
+        <p class="text-xs text-slate-500 mb-2">Tipos a los que el equipo <strong>no</strong> les pega super efectivo:</p>
+        <div class="flex flex-wrap gap-1.5">
+          ${uncoveredTypes.map(t => `
+            <span class="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-medium">${t}</span>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+
+    // SPEED CONTROL
+    html += `
+      <div>
+        <h4 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-gauge-high text-orange-500"></i> Speed Control
+        </h4>
+    `;
+
+    if (foundSpeedControl.size === 0) {
+      html += `
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+          <i class="fa-solid fa-circle-exclamation mr-1.5"></i>
+          El equipo <strong>no tiene</strong> herramientas de speed control detectadas.
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="flex flex-wrap gap-1.5">
+          ${[...foundSpeedControl].map(sc => `
+            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-medium">
+              <i class="fa-solid fa-check mr-1"></i>${sc}
+            </span>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    html += `</div></div>`;
+
+    container.innerHTML = html;
   }
-
-  container.innerHTML = html;
-}
 
   // ======================================================
   // IMPORT / EXPORT
@@ -561,14 +658,14 @@ document.addEventListener('DOMContentLoaded', () => {
       text += `${poke.species}${poke.item ? ' @ ' + poke.item : ''}\n`;
       if (poke.ability) text += `Ability: ${poke.ability}\n`;
 
-      const evs = [];
-      if (poke.sps?.hp)  evs.push(`${spToEVs(poke.sps.hp)} HP`);
-      if (poke.sps?.atk) evs.push(`${spToEVs(poke.sps.atk)} Atk`);
-      if (poke.sps?.def) evs.push(`${spToEVs(poke.sps.def)} Def`);
-      if (poke.sps?.spa) evs.push(`${spToEVs(poke.sps.spa)} SpA`);
-      if (poke.sps?.spd) evs.push(`${spToEVs(poke.sps.spd)} SpD`);
-      if (poke.sps?.spe) evs.push(`${spToEVs(poke.sps.spe)} Spe`);
-      if (evs.length) text += `EVs: ${evs.join(' / ')}\n`;
+      const sps = [];
+      if (poke.sps?.hp)  sps.push(`${poke.sps.hp} HP`);
+      if (poke.sps?.atk) sps.push(`${poke.sps.atk} Atk`);
+      if (poke.sps?.def) sps.push(`${poke.sps.def} Def`);
+      if (poke.sps?.spa) sps.push(`${poke.sps.spa} SpA`);
+      if (poke.sps?.spd) sps.push(`${poke.sps.spd} SpD`);
+      if (poke.sps?.spe) sps.push(`${poke.sps.spe} Spe`);
+      if (sps.length) text += `EVs: ${sps.join(' / ')}\n`;
 
       if (poke.nature) text += `${poke.nature} Nature\n`;
       (poke.moves || []).forEach(m => { if (m) text += `- ${m}\n`; });
@@ -611,7 +708,6 @@ document.addEventListener('DOMContentLoaded', () => {
         item = parts[1].trim();
       }
 
-      // Quitar nickname si existe
       const nickMatch = species.match(/\(([^)]+)\)$/);
       if (nickMatch) species = nickMatch[1].trim();
 
@@ -646,7 +742,8 @@ document.addEventListener('DOMContentLoaded', () => {
               };
               const stat = statMap[statRaw];
               if (stat) {
-                poke.sps[stat] = evsToSP(value);
+                // Sin conversión: se guarda el número tal cual
+                poke.sps[stat] = validateSP(value);
               }
             }
           });
@@ -661,10 +758,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     team = newTeam;
+
+    // Avisar si algún Pokémon se pasa de 66 SP
+    team.forEach((poke, i) => {
+      if (poke) checkSPLimit(poke, i);
+    });
+
     renderTeamSlots();
     updateTypeAnalysis();
     closeImportModal();
-    console.log('Equipo importado:', team);
   }
 
   // ======================================================
