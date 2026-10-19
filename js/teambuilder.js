@@ -705,39 +705,276 @@ document.addEventListener('DOMContentLoaded', () => {
     container.innerHTML = html;
   }
 
-  function updateLeadSuggestions() {
-    const container = document.getElementById('lead-suggestions');
-    if (!container) return;
+// ======================================================
+// SUGERENCIA DE LEADS (parejas) - Versión 1
+// ======================================================
+function updateLeadSuggestions() {
+  const container = document.getElementById('lead-suggestions');
+  if (!container) return;
 
-    const activePokes = team.filter(p => p && p.species);
-    if (activePokes.length === 0) {
-      container.innerHTML = `<p class="text-slate-400">Agrega Pokémon para ver posibles leads...</p>`;
-      return;
-    }
-
-    const LEAD_TOOLS = ["Fake Out","Tailwind","Sticky Web","Thunder Wave","Spore","Icy Wind","Electroweb","Follow Me","Rage Powder","Wide Guard","Quick Guard"];
-    const candidates = [];
-
-    activePokes.forEach(poke => {
-      const tools = [];
-      (poke.moves || []).forEach(m => { if (LEAD_TOOLS.includes(m)) tools.push(m); });
-      if (poke.ability === "Prankster") tools.push("Prankster");
-      if (poke.ability === "Intimidate") tools.push("Intimidate");
-      if (tools.length) candidates.push({ species: poke.species, tools: [...new Set(tools)] });
-    });
-
-    if (candidates.length === 0) {
-      container.innerHTML = `<div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800"><i class="fa-solid fa-circle-exclamation mr-1"></i> No se detectaron herramientas clásicas de lead.</div>`;
-      return;
-    }
-
-    let html = `<div class="space-y-2">`;
-    candidates.forEach(c => {
-      html += `<div class="p-3 bg-blue-50 border border-blue-100 rounded-xl"><p class="font-medium text-sm text-blue-900">${c.species}</p><p class="text-xs text-blue-700 mt-1">Herramientas: ${c.tools.join(", ")}</p></div>`;
-    });
-    html += `</div>`;
-    container.innerHTML = html;
+  const activePokes = team.filter(p => p && p.species);
+  if (activePokes.length < 2) {
+    container.innerHTML = `
+      <p class="text-slate-400 text-sm">
+        Necesitas al menos 2 Pokémon en el equipo para evaluar leads.
+      </p>`;
+    return;
   }
+
+  // ---------- Herramientas detectables ----------
+  const IMMEDIATE = {
+    "Fake Out": 12,
+    "Intimidate": 10,
+    "Tailwind": 11,
+    "Trick Room": 10,
+    "Icy Wind": 8,
+    "Electroweb": 7,
+    "Thunder Wave": 7,
+    "Sticky Web": 8,
+    "Follow Me": 9,
+    "Rage Powder": 9,
+    "Spore": 9,
+    "Wide Guard": 6,
+    "Quick Guard": 6,
+    "Protect": 4
+  };
+
+  const SPEED_CONTROL = ["Tailwind", "Trick Room", "Icy Wind", "Electroweb", "Thunder Wave", "Sticky Web", "Bulldoze", "Rock Tomb"];
+  const REDIRECTION = ["Follow Me", "Rage Powder"];
+  const PIVOT = ["U-turn", "Parting Shot", "Volt Switch", "Flip Turn", "Teleport"];
+  const SETUP = ["Swords Dance", "Nasty Plot", "Calm Mind", "Dragon Dance", "Quiver Dance", "Iron Defense", "Bulk Up"];
+
+  function getTools(poke) {
+    const tools = {
+      immediate: 0,
+      hasFakeOut: false,
+      hasIntimidate: false,
+      hasTailwind: false,
+      hasTrickRoom: false,
+      hasSpeedControl: false,
+      hasRedirection: false,
+      hasPivot: false,
+      hasSetup: false,
+      hasProtect: false,
+      hasPriority: false,
+      moves: poke.moves || [],
+      ability: poke.ability || ""
+    };
+
+    // Ability
+    if (tools.ability === "Intimidate") {
+      tools.hasIntimidate = true;
+      tools.immediate += 10;
+    }
+    if (tools.ability === "Prankster") tools.immediate += 4;
+    if (tools.ability === "Armor Tail") tools.immediate += 5;
+    if (["Drizzle", "Drought", "Sand Stream", "Snow Warning", "Grassy Surge", "Psychic Surge", "Electric Surge", "Misty Surge"].includes(tools.ability)) {
+      tools.immediate += 8;
+    }
+
+    // Moves
+    tools.moves.forEach(m => {
+      if (IMMEDIATE[m]) tools.immediate += IMMEDIATE[m];
+      if (m === "Fake Out") tools.hasFakeOut = true;
+      if (m === "Tailwind") tools.hasTailwind = true;
+      if (m === "Trick Room") tools.hasTrickRoom = true;
+      if (SPEED_CONTROL.includes(m)) tools.hasSpeedControl = true;
+      if (REDIRECTION.includes(m)) tools.hasRedirection = true;
+      if (PIVOT.includes(m)) tools.hasPivot = true;
+      if (SETUP.includes(m)) tools.hasSetup = true;
+      if (m === "Protect") tools.hasProtect = true;
+      if (["Fake Out", "Sucker Punch", "Extreme Speed", "Aqua Jet", "Ice Shard", "Bullet Punch", "Mach Punch", "Shadow Sneak", "Grassy Glide"].includes(m)) {
+        tools.hasPriority = true;
+      }
+    });
+
+    // Limitar impacto inmediato para que no se dispare
+    tools.immediate = Math.min(tools.immediate, 25);
+
+    return tools;
+  }
+
+  // ---------- Generar todas las parejas ----------
+  const pairs = [];
+  for (let i = 0; i < activePokes.length; i++) {
+    for (let j = i + 1; j < activePokes.length; j++) {
+      pairs.push([activePokes[i], activePokes[j]]);
+    }
+  }
+
+  // ---------- Evaluar cada pareja ----------
+  const evaluated = pairs.map(([a, b]) => {
+    const ta = getTools(a);
+    const tb = getTools(b);
+
+    // 1. Impacto inmediato (0-25)
+    let impact = Math.min(25, ta.immediate * 0.6 + tb.immediate * 0.6);
+
+    // 2. Sinergia (0-25)
+    let synergy = 0;
+
+    // Fake Out + setup / Tailwind / atacante
+    if (ta.hasFakeOut && (tb.hasSetup || tb.hasTailwind || tb.hasTrickRoom)) synergy += 10;
+    if (tb.hasFakeOut && (ta.hasSetup || ta.hasTailwind || ta.hasTrickRoom)) synergy += 10;
+
+    // Intimidate + compañero que se beneficia de turno extra
+    if (ta.hasIntimidate && (tb.hasSetup || tb.hasFakeOut || tb.hasSpeedControl)) synergy += 7;
+    if (tb.hasIntimidate && (ta.hasSetup || ta.hasFakeOut || ta.hasSpeedControl)) synergy += 7;
+
+    // Tailwind + cualquier compañero (especialmente si no es rápido)
+    if (ta.hasTailwind || tb.hasTailwind) synergy += 8;
+
+    // Redirección + atacante
+    if (ta.hasRedirection || tb.hasRedirection) synergy += 7;
+
+    // Armor Tail / Farigiraf protegiendo prioridad
+    if ((a.ability === "Armor Tail" || (a.species || "").includes("Farigiraf")) && tb.hasPriority) synergy += 6;
+    if ((b.ability === "Armor Tail" || (b.species || "").includes("Farigiraf")) && ta.hasPriority) synergy += 6;
+
+    // Pivot + presión
+    if (ta.hasPivot || tb.hasPivot) synergy += 4;
+
+    synergy = Math.min(25, synergy);
+
+    // 3. Control de ritmo (0-15)
+    let rhythm = 0;
+    if (ta.hasSpeedControl || tb.hasSpeedControl) rhythm += 9;
+    if (ta.hasTrickRoom || tb.hasTrickRoom) rhythm += 6;
+    if (ta.hasTailwind || tb.hasTailwind) rhythm += 5;
+    rhythm = Math.min(15, rhythm);
+
+    // 4. Supervivencia (0-15) - aproximación
+    let durability = 6; // base
+    if (ta.hasProtect) durability += 3;
+    if (tb.hasProtect) durability += 3;
+    if (ta.hasIntimidate || tb.hasIntimidate) durability += 3;
+    if (ta.hasRedirection || tb.hasRedirection) durability += 2;
+    durability = Math.min(15, durability);
+
+    // 5. Presión ofensiva (0-10)
+    let pressure = 4; // base
+    // Si tienen movimientos ofensivos fuertes (aproximado)
+    const offensiveMoves = ["Close Combat", "Flare Blitz", "Wood Hammer", "Earthquake", "Make It Rain", "Draco Meteor", "Hyper Voice", "Heat Wave", "Thunderbolt", "Moonblast", "Shadow Ball", "Iron Head"];
+    const aOff = (a.moves || []).some(m => offensiveMoves.includes(m));
+    const bOff = (b.moves || []).some(m => offensiveMoves.includes(m));
+    if (aOff) pressure += 3;
+    if (bOff) pressure += 3;
+    pressure = Math.min(10, pressure);
+
+    // 6. Flexibilidad (0-10)
+    let flexibility = 3;
+    if (ta.hasPivot || tb.hasPivot) flexibility += 3;
+    if (ta.hasProtect || tb.hasProtect) flexibility += 2;
+    if ((ta.hasFakeOut && tb.hasSpeedControl) || (tb.hasFakeOut && ta.hasSpeedControl)) flexibility += 2;
+    flexibility = Math.min(10, flexibility);
+
+    // ----- Penalizaciones -----
+    let penalty = 0;
+
+    // Ambos quieren el mismo turno de setup
+    if (ta.hasSetup && tb.hasSetup) penalty += 6;
+
+    // Doble Fake Out (se pisan)
+    if (ta.hasFakeOut && tb.hasFakeOut) penalty += 4;
+
+    // Misma función de speed control
+    if (ta.hasTailwind && tb.hasTailwind) penalty += 5;
+    if (ta.hasTrickRoom && tb.hasTrickRoom) penalty += 5;
+
+    // Puntuación final
+    let total = impact + synergy + rhythm + durability + pressure + flexibility - penalty;
+    total = Math.max(0, Math.min(100, total));
+
+    // Categoría principal
+    let category = "Flexible";
+    if (rhythm >= 10 && impact >= 12) category = "Control";
+    else if (pressure >= 7 && synergy >= 10) category = "Ofensiva";
+    else if ((ta.hasSetup || tb.hasSetup) && (ta.hasFakeOut || tb.hasFakeOut || ta.hasRedirection || tb.hasRedirection)) category = "Setup";
+    else if (synergy >= 12) category = "Flexible";
+
+    // Explicación corta
+    const reasons = [];
+    if (ta.hasFakeOut || tb.hasFakeOut) reasons.push("Fake Out crea un turno libre");
+    if (ta.hasIntimidate || tb.hasIntimidate) reasons.push("Intimidate reduce daño físico");
+    if (ta.hasTailwind || tb.hasTailwind) reasons.push("Tailwind acelera al equipo");
+    if (ta.hasTrickRoom || tb.hasTrickRoom) reasons.push("Trick Room cambia el ritmo");
+    if (ta.hasRedirection || tb.hasRedirection) reasons.push("Redirección protege al compañero");
+    if (synergy >= 12) reasons.push("Buena sinergia entre ambos");
+    if (reasons.length === 0) reasons.push("Combinación equilibrada");
+
+    const warnings = [];
+    if (penalty >= 6) warnings.push("Pueden pisarse los roles");
+    if (!ta.hasProtect && !tb.hasProtect) warnings.push("Sin Protect en la pareja");
+    if (rhythm < 5) warnings.push("Poco control de velocidad");
+
+    return {
+      a: a.species,
+      b: b.species,
+      score: Math.round(total),
+      category,
+      reasons: reasons.slice(0, 3),
+      warnings: warnings.slice(0, 2)
+    };
+  });
+
+  // Ordenar y quedarnos con las mejores
+  evaluated.sort((x, y) => y.score - x.score);
+  const top = evaluated.slice(0, 3);
+
+  // ---------- Render ----------
+  if (top.length === 0 || top[0].score < 25) {
+    container.innerHTML = `
+      <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+        <i class="fa-solid fa-circle-exclamation mr-1.5"></i>
+        No se encontraron parejas de lead especialmente fuertes con los criterios actuales.
+      </div>`;
+    return;
+  }
+
+  let html = `<div class="space-y-3">`;
+
+  top.forEach((pair, idx) => {
+    const isBest = idx === 0;
+    const border = isBest ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-slate-50";
+    const badgeColor = {
+      "Control": "bg-indigo-100 text-indigo-700",
+      "Ofensiva": "bg-red-100 text-red-700",
+      "Setup": "bg-purple-100 text-purple-700",
+      "Flexible": "bg-emerald-100 text-emerald-700"
+    }[pair.category] || "bg-slate-100 text-slate-700";
+
+    html += `
+      <div class="p-3 rounded-xl border ${border}">
+        <div class="flex items-center justify-between mb-1.5">
+          <p class="font-semibold text-sm text-slate-800">
+            ${pair.a} + ${pair.b}
+          </p>
+          <span class="text-[11px] px-2 py-0.5 rounded-lg font-medium ${badgeColor}">
+            ${pair.category}
+          </span>
+        </div>
+
+        <ul class="text-xs text-slate-600 space-y-0.5 mb-1.5">
+          ${pair.reasons.map(r => `<li>• ${r}</li>`).join("")}
+        </ul>
+
+        ${pair.warnings.length > 0 ? `
+          <p class="text-[11px] text-amber-700 mt-1">
+            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+            ${pair.warnings.join(" · ")}
+          </p>` : ""}
+      </div>
+    `;
+  });
+
+  html += `
+    <p class="text-[11px] text-slate-400 mt-1">
+      Evaluación estructural de parejas (turno 1). No conoce al rival.
+    </p>
+  </div>`;
+
+  container.innerHTML = html;
+}
 
   // ======================================================
   // IMPORT / EXPORT
