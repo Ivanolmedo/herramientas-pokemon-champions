@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         team[idx] = null;
         renderTeamSlots();
         updateTypeAnalysis();
+        updateAssistance();
         if (currentEditingSlot === idx) closeEditor();
       });
     });
@@ -165,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkSPLimit(team[currentEditingSlot], currentEditingSlot);
     renderTeamSlots();
     updateTypeAnalysis();
+    updateAssistance();
     closeEditor();
   }
 
@@ -388,6 +390,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateEditSprite();
   }
+
+
 
   // ======================================================
   // ANÁLISIS COMPLETO
@@ -766,6 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderTeamSlots();
     updateTypeAnalysis();
+    updateAssistance();
     closeImportModal();
   }
 
@@ -779,6 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
       team[currentEditingSlot] = null;
       renderTeamSlots();
       updateTypeAnalysis();
+      updateAssistance();
       closeEditor();
     }
   });
@@ -794,11 +800,172 @@ document.addEventListener('DOMContentLoaded', () => {
       team = [null, null, null, null, null, null];
       renderTeamSlots();
       updateTypeAnalysis();
+      updateAssistance();
       closeEditor();
     }
   });
 
   document.getElementById('edit-species')?.addEventListener('input', updateEditSprite);
+
+  // ======================================================
+// ASISTENCIA - Amenazas + Leads
+// ======================================================
+
+// Lista estática de amenazas populares (meta Champions actual)
+// Orden aproximado por relevancia. Fácil de actualizar.
+const META_THREATS = [
+  { name: "Rillaboom", tags: ["Grassy", "Fake Out", "Priority"] },
+  { name: "Incineroar", tags: ["Intimidate", "Fake Out", "Pivot"] },
+  { name: "Sneasler", tags: ["Unburden", "Dire Claw", "Offensive"] },
+  { name: "Gholdengo", tags: ["Good as Gold", "Make It Rain", "Special"] },
+  { name: "Salamence-Mega", tags: ["Intimidate", "Hyper Voice", "Mega"] },
+  { name: "Kingambit", tags: ["Supreme Overlord", "Sucker Punch", "Priority"] },
+  { name: "Garchomp", tags: ["Rough Skin", "Ground", "Dragon"] },
+  { name: "Garchomp-Mega-Z", tags: ["Rough Skin", "Special", "Mega"] },
+  { name: "Volcarona", tags: ["Quiver Dance", "Bug", "Fire"] },
+  { name: "Floette-Mega", tags: ["Fairy Aura", "Moonblast", "Mega"] },
+  { name: "Arcanine-Hisui", tags: ["Rock Head", "Head Smash", "Physical"] },
+  { name: "Farigiraf", tags: ["Armor Tail", "Psychic", "Support"] },
+  { name: "Indeedee", tags: ["Psychic Surge", "Follow Me", "Support"] },
+  { name: "Archaludon", tags: ["Stamina", "Body Press", "Steel"] },
+  { name: "Pelipper", tags: ["Drizzle", "Hurricane", "Rain"] },
+  { name: "Basculegion", tags: ["Swift Swim", "Wave Crash", "Water"] },
+  { name: "Excadrill", tags: ["Sand Rush", "Iron Head", "Ground"] },
+  { name: "Tyranitar-Mega", tags: ["Sand Stream", "Rock Slide", "Mega"] },
+  { name: "Whimsicott", tags: ["Prankster", "Tailwind", "Speed Control"] },
+  { name: "Amoonguss", tags: ["Regenerator", "Spore", "Redirection"] }
+];
+
+// Movimientos típicos de lead
+const LEAD_TOOLS = {
+  "Fake Out": "Fake Out",
+  "Tailwind": "Tailwind",
+  "Sticky Web": "Sticky Web",
+  "Thunder Wave": "Thunder Wave",
+  "Spore": "Spore",
+  "Icy Wind": "Icy Wind",
+  "Electroweb": "Electroweb",
+  "Follow Me": "Follow Me",
+  "Rage Powder": "Rage Powder",
+  "Wide Guard": "Wide Guard",
+  "Quick Guard": "Quick Guard",
+  "Ally Switch": "Ally Switch"
+};
+
+function updateAssistance() {
+  updateThreatDetector();
+  updateLeadSuggestions();
+}
+
+function updateThreatDetector() {
+  const container = document.getElementById('threat-detector');
+  if (!container) return;
+
+  const activePokes = team.filter(p => p && p.species);
+  if (activePokes.length === 0) {
+    container.innerHTML = `<p class="text-slate-400">Agrega Pokémon para analizar amenazas...</p>`;
+    return;
+  }
+
+  // Usamos el mismo TYPE_CHART que ya tienes en updateTypeAnalysis
+  // (asumimos que está disponible en el scope)
+
+  let html = `<div class="space-y-2">`;
+
+  META_THREATS.forEach(threat => {
+    // Análisis muy básico por ahora: miramos si el equipo tiene debilidad neta al tipo principal del threat
+    // (versión simple, se puede mejorar mucho después)
+
+    const isOnTeam = activePokes.some(p => p.species.toLowerCase().includes(threat.name.toLowerCase().split('-')[0]));
+
+    let status = "neutral";
+    let statusText = "Revisar";
+    let statusClass = "bg-slate-100 text-slate-600";
+
+    if (isOnTeam) {
+      statusText = "En tu equipo";
+      statusClass = "bg-blue-50 text-blue-700";
+    }
+
+    html += `
+      <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+        <div class="flex items-center gap-2">
+          <img src="https://play.pokemonshowdown.com/sprites/gen5/${toID(threat.name)}.png" 
+               class="w-8 h-8 object-contain" onerror="this.style.display='none'">
+          <div>
+            <p class="font-medium text-sm">${threat.name}</p>
+            <p class="text-[11px] text-slate-500">${threat.tags.join(" · ")}</p>
+          </div>
+        </div>
+        <span class="text-xs px-2 py-1 rounded-lg ${statusClass}">${statusText}</span>
+      </div>
+    `;
+  });
+
+  html += `</div>
+    <p class="text-[11px] text-slate-400 mt-3">
+      Datos orientativos basados en meta actual de Champions (Pikalytics). 
+      Próximamente se podrá conectar a datos en vivo.
+    </p>`;
+
+  container.innerHTML = html;
+}
+
+function updateLeadSuggestions() {
+  const container = document.getElementById('lead-suggestions');
+  if (!container) return;
+
+  const activePokes = team.filter(p => p && p.species);
+  if (activePokes.length === 0) {
+    container.innerHTML = `<p class="text-slate-400">Agrega Pokémon para ver posibles leads...</p>`;
+    return;
+  }
+
+  const leadCandidates = [];
+
+  activePokes.forEach(poke => {
+    const tools = [];
+    (poke.moves || []).forEach(move => {
+      if (LEAD_TOOLS[move]) tools.push(LEAD_TOOLS[move]);
+    });
+
+    // También detectamos por habilidad
+    if (poke.ability === "Prankster") tools.push("Prankster");
+    if (poke.ability === "Intimidate") tools.push("Intimidate");
+
+    if (tools.length > 0) {
+      leadCandidates.push({
+        species: poke.species,
+        tools: [...new Set(tools)]
+      });
+    }
+  });
+
+  if (leadCandidates.length === 0) {
+    container.innerHTML = `
+      <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+        <i class="fa-solid fa-circle-exclamation mr-1.5"></i>
+        No se detectaron herramientas clásicas de lead (Fake Out, Tailwind, Follow Me, etc.).
+      </div>
+    `;
+    return;
+  }
+
+  let html = `<div class="space-y-2">`;
+  leadCandidates.forEach(cand => {
+    html += `
+      <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl">
+        <p class="font-medium text-sm text-blue-900">${cand.species}</p>
+        <p class="text-xs text-blue-700 mt-1">
+          Herramientas: ${cand.tools.join(", ")}
+        </p>
+      </div>
+    `;
+  });
+  html += `</div>`;
+
+  container.innerHTML = html;
+}
 
   // ======================================================
   // INICIALIZACIÓN
@@ -807,4 +974,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSetsAutocomplete();
   renderTeamSlots();
   updateTypeAnalysis();
+  updateAssistance();
 });
