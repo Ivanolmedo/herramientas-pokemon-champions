@@ -72,6 +72,15 @@
         <button id="btn-export" class="px-4 py-2 bg-white border border-orange-200 text-orange-700 rounded-xl text-sm font-semibold hover:bg-orange-50 transition">
           <i class="fa-solid fa-file-export mr-1.5"></i>Exportar
         </button>
+        <button id="btn-save-team" class="px-4 py-2 bg-white border border-orange-200 text-orange-700 rounded-xl text-sm font-semibold hover:bg-orange-50 transition">
+          <i class="fa-solid fa-floppy-disk mr-1.5"></i>Guardar
+        </button>
+        <button id="btn-load-team" class="px-4 py-2 bg-white border border-orange-200 text-orange-700 rounded-xl text-sm font-semibold hover:bg-orange-50 transition">
+          <i class="fa-solid fa-folder-open mr-1.5"></i>Cargar
+        </button>
+        <button id="btn-import-from-calc" class="px-4 py-2 bg-white border border-blue-200 text-blue-700 rounded-xl text-sm font-semibold hover:bg-blue-50 transition">
+        <i class="fa-solid fa-calculator mr-1.5"></i>Importar de Calc
+        </button>
         <button id="btn-clear" class="px-4 py-2 bg-white border border-red-200 text-red-600 rounded-xl text-sm font-semibold hover:bg-red-50 transition">
           <i class="fa-solid fa-trash mr-1.5"></i>Limpiar
         </button>
@@ -270,7 +279,25 @@
         </div>
       </div>
     </div>
+    <!-- ==================== LOAD TEAM MODAL ==================== -->
+    <div id="load-modal" class="fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-nunito font-bold text-lg">Equipos guardados</h3>
+      <button id="btn-close-load" class="text-slate-400 hover:text-slate-600 text-xl">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
 
+    <div id="saved-teams-list" class="space-y-2 max-h-80 overflow-y-auto">
+      <!-- Se rellena con JavaScript -->
+    </div>
+
+    <p id="no-saved-teams" class="text-sm text-slate-400 text-center py-6 hidden">
+      No tienes equipos guardados todavía.
+    </p>
+    </div>
+    </div>
   </main>
 
   <footer class="border-t border-orange-100 mt-12 py-6 text-center text-sm text-slate-500">

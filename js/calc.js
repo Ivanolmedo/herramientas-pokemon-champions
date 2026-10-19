@@ -690,6 +690,71 @@ function createField(attackerSide, defenderSide) {
   });
 
   // ======================================================
+// ENVIAR POKÉMON AL TEAMBUILDER
+// ======================================================
+function sendPokemonToTeambuilder(side = 'my') {
+  const prefix = side === 'my' ? 'my' : 'opp';
+
+  // Intentar varios IDs posibles por si el HTML usa nombres distintos
+  const getVal = (ids) => {
+    for (const id of ids) {
+      const el = document.getElementById(id);
+      if (el && el.value != null && String(el.value).trim() !== '') return String(el.value).trim();
+    }
+    return '';
+  };
+
+  const getSP = (stat) => {
+    const candidates = [
+      document.querySelector(`#${prefix}-sp-controls .edit-sp-input[data-stat="${stat}"]`),
+      document.querySelector(`.${prefix}-sp-input[data-stat="${stat}"]`),
+      document.querySelector(`[data-side="${prefix}"][data-stat="${stat}"]`),
+      document.getElementById(`${prefix}-${stat}`),
+      document.getElementById(`${prefix}-sp-${stat}`)
+    ];
+    for (const el of candidates) {
+      if (el && el.value != null) return Number(el.value) || 0;
+    }
+    return 0;
+  };
+
+  const species = getVal([`${prefix}-species`, `species-${prefix}`, `${prefix}Species`]);
+  if (!species) {
+    alert('Selecciona un Pokémon primero.');
+    return;
+  }
+
+  const poke = {
+    species,
+    nature:  getVal([`${prefix}-nature`, `nature-${prefix}`]) || 'Serious',
+    ability: getVal([`${prefix}-ability`, `ability-${prefix}`]),
+    item:    getVal([`${prefix}-item`, `item-${prefix}`]),
+    sps: {
+      hp:  getSP('hp'),
+      atk: getSP('atk'),
+      def: getSP('def'),
+      spa: getSP('spa'),
+      spd: getSP('spd'),
+      spe: getSP('spe')
+    },
+    moves: [
+      getVal([`${prefix}-move1`, `${prefix}-move-1`, `move1-${prefix}`]),
+      getVal([`${prefix}-move2`, `${prefix}-move-2`, `move2-${prefix}`]),
+      getVal([`${prefix}-move3`, `${prefix}-move-3`, `move3-${prefix}`]),
+      getVal([`${prefix}-move4`, `${prefix}-move-4`, `move4-${prefix}`])
+    ],
+    transferredAt: Date.now()
+  };
+
+  localStorage.setItem('champions_transfer_poke', JSON.stringify(poke));
+  console.log('[Calc → Team] Guardado en localStorage:', poke);
+  alert(`"${species}" listo para el Teambuilder.\nAbre o recarga el Teambuilder.`);
+}
+
+document.getElementById('btn-send-my-to-team')?.addEventListener('click', () => sendPokemonToTeambuilder('my'));
+document.getElementById('btn-send-opp-to-team')?.addEventListener('click', () => sendPokemonToTeambuilder('opp'));
+
+  // ======================================================
   // INICIALIZACIÓN
   // ======================================================
   setupSPControls();

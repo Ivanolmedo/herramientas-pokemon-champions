@@ -1068,35 +1068,233 @@ function updateLeadSuggestions() {
   }
 
   // ======================================================
-  // EVENTOS
-  // ======================================================
-  document.getElementById('btn-close-editor')?.addEventListener('click', closeEditor);
-  document.getElementById('btn-save-pokemon')?.addEventListener('click', saveCurrentPokemon);
-  document.getElementById('btn-remove-pokemon')?.addEventListener('click', () => {
-    if (currentEditingSlot !== null) {
-      team[currentEditingSlot] = null;
-      renderTeamSlots();
-      updateAllAnalysis();
-      closeEditor();
+// GUARDAR / CARGAR EQUIPOS (localStorage)
+// ======================================================
+const STORAGE_KEY = 'champions_saved_teams';
+
+function getSavedTeams() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function setSavedTeams(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function saveCurrentTeam() {
+  const active = team.filter(p => p && p.species);
+  if (active.length === 0) {
+    alert('No hay ningún Pokémon en el equipo para guardar.');
+    return;
+  }
+
+  const name = prompt('Nombre para este equipo:', 'Mi equipo');
+  if (!name || !name.trim()) return;
+
+  const saved = getSavedTeams();
+  saved[name.trim()] = {
+    team: JSON.parse(JSON.stringify(team)), // copia profunda
+    date: new Date().toISOString()
+  };
+  setSavedTeams(saved);
+  alert(`Equipo "${name.trim()}" guardado correctamente.`);
+}
+
+function openLoadModal() {
+  const modal = document.getElementById('load-modal');
+  const list = document.getElementById('saved-teams-list');
+  const emptyMsg = document.getElementById('no-saved-teams');
+
+  const saved = getSavedTeams();
+  const names = Object.keys(saved);
+
+  list.innerHTML = '';
+
+  if (names.length === 0) {
+    emptyMsg.classList.remove('hidden');
+    list.classList.add('hidden');
+  } else {
+    emptyMsg.classList.add('hidden');
+    list.classList.remove('hidden');
+
+    names.forEach(name => {
+      const data = saved[name];
+      const date = data.date ? new Date(data.date).toLocaleDateString() : '';
+      const count = (data.team || []).filter(p => p && p.species).length;
+
+      const div = document.createElement('div');
+      div.className = 'flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition';
+      div.innerHTML = `
+        <div>
+          <p class="font-medium text-sm text-slate-800">${name}</p>
+          <p class="text-xs text-slate-500">${count} Pokémon · ${date}</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="load-btn px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded-lg font-medium" data-name="${name}">
+            Cargar
+          </button>
+          <button class="delete-btn px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs rounded-lg" data-name="${name}">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+
+    // Eventos de los botones
+    list.querySelectorAll('.load-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        const data = getSavedTeams()[name];
+        if (data && data.team) {
+          team = JSON.parse(JSON.stringify(data.team));
+          renderTeamSlots();
+          updateAllAnalysis();
+          closeLoadModal();
+          alert(`Equipo "${name}" cargado.`);
+        }
+      });
+    });
+
+    list.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        if (confirm(`¿Eliminar el equipo "${name}"?`)) {
+          const saved = getSavedTeams();
+          delete saved[name];
+          setSavedTeams(saved);
+          openLoadModal(); // refrescar lista
+        }
+      });
+    });
+
+    document.getElementById('btn-import-from-calc')?.addEventListener('click', () => {
+      const ok = checkTransferFromCalc();
+      if (!ok) {
+        const raw = localStorage.getItem('champions_transfer_poke');
+        if (!raw) alert('No hay ningún Pokémon pendiente. Envíalo primero desde la Calculadora.');
+      }
+});
+  }
+
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+function closeLoadModal() {
+  const modal = document.getElementById('load-modal');
+  modal.classList.add('hidden');
+  modal.classList.remove('flex');
+}
+// ======================================================
+// EVENTOS
+// ======================================================
+document.getElementById('btn-close-editor')?.addEventListener('click', closeEditor);
+document.getElementById('btn-save-pokemon')?.addEventListener('click', saveCurrentPokemon);
+
+document.getElementById('btn-remove-pokemon')?.addEventListener('click', () => {
+  if (currentEditingSlot !== null) {
+    team[currentEditingSlot] = null;
+    renderTeamSlots();
+    updateAllAnalysis();
+    closeEditor();
+  }
+});
+
+document.getElementById('btn-export')?.addEventListener('click', exportTeam);
+document.getElementById('btn-import')?.addEventListener('click', openImportModal);
+document.getElementById('btn-close-import')?.addEventListener('click', closeImportModal);
+document.getElementById('btn-cancel-import')?.addEventListener('click', closeImportModal);
+document.getElementById('btn-confirm-import')?.addEventListener('click', importTeam);
+
+// Guardar / Cargar
+document.getElementById('btn-save-team')?.addEventListener('click', saveCurrentTeam);
+document.getElementById('btn-load-team')?.addEventListener('click', openLoadModal);
+document.getElementById('btn-close-load')?.addEventListener('click', closeLoadModal);
+
+// Limpiar equipo
+document.getElementById('btn-clear')?.addEventListener('click', () => {
+  if (confirm('¿Seguro que quieres borrar todo el equipo?')) {
+    team = [null, null, null, null, null, null];
+    renderTeamSlots();
+    updateAllAnalysis();
+    closeEditor();
+  }
+});
+
+document.getElementById('edit-species')?.addEventListener('input', updateEditSprite);
+
+// ======================================================
+// RECIBIR POKÉMON DESDE LA CALCULADORA
+// ======================================================
+function checkTransferFromCalc() {
+  const KEY = 'champions_transfer_poke';
+  const raw = localStorage.getItem(KEY);
+  console.log('[Team] Transfer raw:', raw);
+
+  if (!raw) {
+    console.log('[Team] No hay Pokémon pendiente desde la calculadora');
+    return false;
+  }
+
+  try {
+    const poke = JSON.parse(raw);
+    console.log('[Team] Transfer parseado:', poke);
+
+    if (!poke || !poke.species) {
+      console.warn('[Team] Objeto inválido, se descarta');
+      localStorage.removeItem(KEY);
+      return false;
     }
-  });
 
-  document.getElementById('btn-export')?.addEventListener('click', exportTeam);
-  document.getElementById('btn-import')?.addEventListener('click', openImportModal);
-  document.getElementById('btn-close-import')?.addEventListener('click', closeImportModal);
-  document.getElementById('btn-cancel-import')?.addEventListener('click', closeImportModal);
-  document.getElementById('btn-confirm-import')?.addEventListener('click', importTeam);
-
-  document.getElementById('btn-clear')?.addEventListener('click', () => {
-    if (confirm('¿Seguro que quieres borrar todo el equipo?')) {
-      team = [null, null, null, null, null, null];
-      renderTeamSlots();
-      updateAllAnalysis();
-      closeEditor();
+    let slot = -1;
+    for (let i = 0; i < team.length; i++) {
+      if (!team[i] || !team[i].species) {
+        slot = i;
+        break;
+      }
     }
-  });
 
-  document.getElementById('edit-species')?.addEventListener('input', updateEditSprite);
+    if (slot === -1) {
+      const ok = confirm(`Equipo lleno. ¿Reemplazar Slot 6 por ${poke.species}?`);
+      if (!ok) {
+        // No borramos: el usuario puede liberar un slot y pulsar "Importar pendiente"
+        return false;
+      }
+      slot = 5;
+    }
+
+    team[slot] = {
+      species: String(poke.species),
+      nature:  poke.nature  || 'Serious',
+      ability: poke.ability || '',
+      item:    poke.item    || '',
+      sps: {
+        hp:  Number(poke.sps?.hp)  || 0,
+        atk: Number(poke.sps?.atk) || 0,
+        def: Number(poke.sps?.def) || 0,
+        spa: Number(poke.sps?.spa) || 0,
+        spd: Number(poke.sps?.spd) || 0,
+        spe: Number(poke.sps?.spe) || 0
+      },
+      moves: Array.isArray(poke.moves) ? poke.moves.map(m => m || '') : ['', '', '', '']
+    };
+
+    localStorage.removeItem(KEY);
+    renderTeamSlots();
+    updateAllAnalysis();
+    console.log(`[Team] ${poke.species} colocado en slot ${slot + 1}`);
+    alert(`"${poke.species}" añadido al Slot ${slot + 1}.`);
+    return true;
+  } catch (e) {
+    console.error('[Team] Error al importar desde calculadora:', e);
+    localStorage.removeItem(KEY);
+    return false;
+  }
+}
 
   // ======================================================
   // INICIALIZACIÓN
@@ -1105,6 +1303,8 @@ function updateLeadSuggestions() {
   setupSetsAutocomplete();
   renderTeamSlots();
   updateAllAnalysis();
+
+  checkTransferFromCalc();
 
   // Intentar cargar meta de Pikalytics
   loadMetaFromPikalytics().then(success => {
