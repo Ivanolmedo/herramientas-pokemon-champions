@@ -688,6 +688,58 @@ function createField(attackerSide, defenderSide) {
       setTimeout(() => btn.innerHTML = orig, 1500);
     });
   });
+  function buildCalcNoteText(side = 'my') {
+  // Ajusta estos IDs a los de tu calc si son distintos
+  const mySpecies  = document.getElementById('my-species')?.value?.trim() || 'Mi Pokémon';
+  const oppSpecies = document.getElementById('opp-species')?.value?.trim() || 'Rival';
+
+  // Resultados: usa los contenedores reales de tu calc
+  const resultsMyToOpp = document.getElementById('results-my-to-opp')?.innerText?.trim() || '';
+  const resultsOppToMy = document.getElementById('results-opp-to-my')?.innerText?.trim() || '';
+
+  // Si hay un resultado seleccionado / principal, priorízalo
+  let main = '';
+  if (side === 'my' && resultsMyToOpp) {
+    main = `${mySpecies} → ${oppSpecies}:\n${resultsMyToOpp.slice(0, 500)}`;
+  } else if (resultsOppToMy) {
+    main = `${oppSpecies} → ${mySpecies}:\n${resultsOppToMy.slice(0, 500)}`;
+  } else {
+    main = resultsMyToOpp || resultsOppToMy || 'Cálculo guardado (sin texto de resultado detectado).';
+  }
+
+  return main.trim();
+}
+
+function saveCalcAsNote(side = 'my') {
+  const prefix = side === 'my' ? 'my' : 'opp';
+  const species = document.getElementById(`${prefix}-species`)?.value?.trim();
+  if (!species) {
+    alert('Selecciona un Pokémon primero.');
+    return;
+  }
+
+  const text = buildCalcNoteText(side);
+  const note = {
+    id: 'n_' + Date.now(),
+    text,
+    date: new Date().toISOString(),
+    source: 'calc',
+    species // para emparejar en el teambuilder
+  };
+
+  // Cola de notas pendientes (pueden acumularse varias)
+  let queue = [];
+  try {
+    queue = JSON.parse(localStorage.getItem('champions_pending_notes') || '[]');
+  } catch (e) {}
+  queue.push(note);
+  localStorage.setItem('champions_pending_notes', JSON.stringify(queue));
+
+  console.log('[Calc] Nota guardada:', note);
+  alert(`Nota guardada para "${species}".\nÁbrela en el Teambuilder (se asignará a un Pokémon con el mismo nombre o al editarlo).`);
+}
+
+document.getElementById('btn-save-note-my')?.addEventListener('click', () => saveCalcAsNote('my'));
 
   // ======================================================
 // ENVIAR POKÉMON AL TEAMBUILDER
