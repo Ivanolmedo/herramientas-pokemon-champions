@@ -1,818 +1,371 @@
 /**
- * calc.js - Versión corregida
- * - Manejo correcto de movimientos sin daño
- * - Aplicación completa de Stat Points desde sets
- * - Auto-activación de clima / terreno según habilidad
+ * calc.js — Calculadora Champions v0.8
+ * Bilateral, SP, boosts, Fairy Aura, notas por movimiento, transfer teambuilder
  */
-
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c[Calc] Versión corregida iniciada', 'color: #ea580c; font-weight: bold;');
+  console.log('%c[Calc] v0.8 cargado', 'color: #ea580c; font-weight: bold;');
 
   if (typeof calc === 'undefined') {
-    console.error('❌ @smogon/calc no se cargó');
+    const out = document.getElementById('damage-output');
+    if (out) {
+      out.innerHTML = `<div class="text-center text-red-500 py-6">
+        <p>Error cargando @smogon/calc. Revisa la conexión.</p></div>`;
+    }
     return;
   }
 
-  // ======================================================
-  // UTILIDADES
-  // ======================================================
-  function spToEVs(sp) {
-    sp = Number(sp) || 0;
+  // ---------- Utils ----------
+  function debounce(fn, delay) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+  }
+
+  function toID(text) {
+    return (text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+  }
+
+  function clampSP(v) {
+    v = Number(v) || 0;
+    return Math.max(0, Math.min(32, v));
+  }
+
+  /** Champions SP (0-32) → EVs aproximados para @smogon/calc (0-252) */
+  function spToEV(sp) {
+    sp = clampSP(sp);
     if (sp <= 0) return 0;
     if (sp >= 32) return 252;
-    return 4 + (sp - 1) * 8;
+    return Math.round((sp / 32) * 252);
   }
 
-  function debounce(fn, delay) {
-    let timer;
-    return function (...args) {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn.apply(this, args), delay);
-    };
-  }
-
-  // ======================================================
-// SPRITES
-// ======================================================
-function toID(text) {
-  return (text || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
-}
-
-function updateSprite(side) {
-  const speciesInput = document.getElementById(`${side}-species`);
-  const spriteImg = document.getElementById(`${side}-sprite`);
-  if (!speciesInput || !spriteImg) return;
-
-  const name = speciesInput.value.trim();
-  if (!name) {
-    spriteImg.classList.add('hidden');
-    spriteImg.src = '';
-    return;
-  }
-
-  // Intentamos obtener el id correcto desde calc si es posible
-  let spriteId = toID(name);
-
-  // Casos especiales comunes de formes
-  const specials = {
-    'charizardmegax': 'charizard-megax',
-    'charizardmegay': 'charizard-megay',
-    'venusaurmega': 'venusaur-mega',
-    'blastoisemega': 'blastoise-mega',
-    'gengarmega': 'gengar-mega',
-    'gyaradosmega': 'gyarados-mega',
-    'kangaskhanmega': 'kangaskhan-mega',
-    'pinsirmega': 'pinsir-mega',
-    'aerodactylmega': 'aerodactyl-mega',
-    'mewtwomegax': 'mewtwo-megax',
-    'mewtwomegay': 'mewtwo-megay',
-    'ampharosmega': 'ampharos-mega',
-    'scizormega': 'scizor-mega',
-    'heracrossmega': 'heracross-mega',
-    'houndoommega': 'houndoom-mega',
-    'tyranitarmega': 'tyranitar-mega',
-    'blazikenmega': 'blaziken-mega',
-    'gardevoirmega': 'gardevoir-mega',
-    'mawilemega': 'mawile-mega',
-    'aggronmega': 'aggron-mega',
-    'medichammega': 'medicham-mega',
-    'manectricmega': 'manectric-mega',
-    'banettemega': 'banette-mega',
-    'absolmega': 'absol-mega',
-    'garchompmega': 'garchomp-mega',
-    'lucariomega': 'lucario-mega',
-    'abomasnowmega': 'abomasnow-mega',
-    'beedrillmega': 'beedrill-mega',
-    'pidgeotmega': 'pidgeot-mega',
-    'slowbromega': 'slowbro-mega',
-    'steelixmega': 'steelix-mega',
-    'sceptilemega': 'sceptile-mega',
-    'swamperttmega': 'swampert-mega',
-    'sableyemega': 'sableye-mega',
-    'sharpedomega': 'sharpedo-mega',
-    'cameruptmega': 'camerupt-mega',
-    'altariamega': 'altaria-mega',
-    'glaliemega': 'glalie-mega',
-    'salamencemega': 'salamence-mega',
-    'metagrossmega': 'metagross-mega',
-    'latiasmega': 'latias-mega',
-    'latiosmega': 'latios-mega',
-    'rayquazamega': 'rayquaza-mega',
-    'lopunnymega': 'lopunny-mega',
-    'gallademega': 'gallade-mega',
-    'audinomega': 'audino-mega',
-    'dianciemega': 'diancie-mega'
-  };
-
-  if (specials[spriteId]) {
-    spriteId = specials[spriteId];
-  }
-
-  // Usamos sprites de Pokémon Showdown (gen5 - estables y ligeros)
-  const url = `https://play.pokemonshowdown.com/sprites/gen5/${spriteId}.png`;
-
-  spriteImg.src = url;
-  spriteImg.alt = name;
-  spriteImg.classList.remove('hidden');
-
-  // Si falla la carga, ocultamos el icono
-  spriteImg.onerror = () => {
-    spriteImg.classList.add('hidden');
-  };
-}
-
-  // ======================================================
-  // STAT POINTS
-  // ======================================================
-  function setupSPControls() {
-    document.querySelectorAll('.sp-slider, .sp-input').forEach(el => {
-      el.addEventListener('input', function () {
-        const side = this.dataset.side;
-        const stat = this.dataset.stat;
-        let value = Math.max(0, Math.min(32, Number(this.value) || 0));
-
-        const numberInput = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
-        const sliderInput = document.querySelector(`.sp-slider[data-side="${side}"][data-stat="${stat}"]`);
-
-        if (numberInput) numberInput.value = value;
-        if (sliderInput) sliderInput.value = value;
-
-        updateSPCounter(side);
-        runCalculation();
-      });
+  function readBoosts(side) {
+    const root = document.getElementById(side + '-boosts');
+    const boosts = {};
+    if (!root) return boosts;
+    root.querySelectorAll('[data-boost]').forEach(sel => {
+      const stat = sel.dataset.boost;
+      const v = Number(sel.value) || 0;
+      if (stat && v !== 0) boosts[stat] = v;
     });
+    return boosts;
   }
 
-  function updateSPCounter(side) {
-    const stats = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
-    let total = 0;
-    stats.forEach(stat => {
-      const input = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
-      total += Number(input?.value) || 0;
+  function readSP(side) {
+    const sps = { hp: 0, atk: 0, def: 0, spa: 0, spd: 0, spe: 0 };
+    document.querySelectorAll(`.sp-input[data-side="${side}"]`).forEach(el => {
+      const stat = el.dataset.stat;
+      if (stat) sps[stat] = clampSP(el.value);
     });
+    return sps;
+  }
 
-    const counter = document.getElementById(`${side}-sp-remaining`);
-    if (counter) {
-      counter.textContent = `${total} / 66`;
-      counter.classList.toggle('text-red-600', total > 66);
-      counter.classList.toggle('text-orange-600', side === 'my' && total <= 66);
-      counter.classList.toggle('text-blue-600', side === 'opp' && total <= 66);
+  function updateSPTotal(side) {
+    const sps = readSP(side);
+    const total = Object.values(sps).reduce((a, b) => a + b, 0);
+    const el = document.getElementById(side + '-sp-total');
+    if (el) {
+      el.textContent = `${total} / 66`;
+      el.classList.toggle('text-red-600', total > 66);
+      el.classList.toggle('text-orange-600', total <= 66);
     }
   }
 
-  // ======================================================
-  // CREAR POKEMON
-  // ======================================================
-  function createPokemon(side) {
-    const gen = calc.Generations.get(9);
-    const name = document.getElementById(`${side}-species`)?.value?.trim();
-    if (!name) return null;
-
-    const sp = {};
-    ['hp', 'atk', 'def', 'spa', 'spd', 'spe'].forEach(stat => {
-      const input = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
-      sp[stat] = Number(input?.value) || 0;
-    });
-
-    const options = {
-      level: 50,
-      nature: document.getElementById(`${side}-nature`)?.value || 'Serious',
-      ability: document.getElementById(`${side}-ability`)?.value || undefined,
-      item: document.getElementById(`${side}-item`)?.value || undefined,
-      ivs: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
-      evs: {
-        hp:  spToEVs(sp.hp),
-        atk: spToEVs(sp.atk),
-        def: spToEVs(sp.def),
-        spa: spToEVs(sp.spa),
-        spd: spToEVs(sp.spd),
-        spe: spToEVs(sp.spe)
-      }
-    };
-
-    try {
-      return new calc.Pokemon(gen, name, options);
-    } catch (e) {
-      console.warn(`Error creando ${side}:`, e.message);
-      return null;
-    }
-  }
-
-  // ======================================================
-  // FIELD
-  // ======================================================
-function createField(attackerSide, defenderSide) {
-  const weatherBtn = document.querySelector('.field-btn[data-group="weather"].active');
-  const terrainBtn = document.querySelector('.field-btn[data-group="terrain"].active');
-  const formatBtn  = document.querySelector('.field-btn:not([data-group]).active');
-
-  return new calc.Field({
-    gameType: formatBtn?.dataset.value === 'singles' ? 'Singles' : 'Doubles',
-    weather: weatherBtn?.dataset.value === 'none' ? undefined : weatherBtn?.dataset.value,
-    terrain: terrainBtn?.dataset.value === 'none' ? undefined : terrainBtn?.dataset.value,
-    attackerSide: {
-      isHelpingHand: document.getElementById(`${attackerSide}-helping-hand`)?.checked || false,
-      isReflect:     document.getElementById(`${attackerSide}-reflect`)?.checked || false,
-      isLightScreen: document.getElementById(`${attackerSide}-lightscreen`)?.checked || false,
-      isAuroraVeil:  document.getElementById(`${attackerSide}-auroraveil`)?.checked || false,
-      isTailwind:    document.getElementById(`${attackerSide}-tailwind`)?.checked || false,
-      isFriendGuard: document.getElementById(`${attackerSide}-friendguard`)?.checked || false,
-    },
-    defenderSide: {
-      isHelpingHand: document.getElementById(`${defenderSide}-helping-hand`)?.checked || false,
-      isReflect:     document.getElementById(`${defenderSide}-reflect`)?.checked || false,
-      isLightScreen: document.getElementById(`${defenderSide}-lightscreen`)?.checked || false,
-      isAuroraVeil:  document.getElementById(`${defenderSide}-auroraveil`)?.checked || false,
-      isTailwind:    document.getElementById(`${defenderSide}-tailwind`)?.checked || false,
-      isFriendGuard: document.getElementById(`${defenderSide}-friendguard`)?.checked || false,
-    }
-  });
-}
-
-  // ======================================================
-  // CÁLCULO DE UN LADO (con manejo de movimientos sin daño)
-  // ======================================================
-  function calculateSide(attacker, defender, attackerSideName, resultsId) {
-    const container = document.getElementById(resultsId);
-    if (!container) return;
-
-    if (!attacker || !defender) {
-      container.innerHTML = `<p class="text-sm text-slate-400 text-center py-4">Faltan datos</p>`;
+  function updateSprite(side) {
+    const name = document.getElementById(side + '-species')?.value?.trim();
+    const img = document.getElementById(side + '-sprite');
+    if (!img) return;
+    if (!name) {
+      img.classList.add('hidden');
       return;
     }
-
-    const gen = calc.Generations.get(9);
-    const field = createField(attackerSideName, attackerSideName === 'my' ? 'opp' : 'my');
-
-    let html = '';
-    let hasMoves = false;
-
-    document.querySelectorAll(`.move-input[data-side="${attackerSideName}"]`).forEach(input => {
-      const moveName = input.value?.trim();
-      if (!moveName) return;
-      hasMoves = true;
-
-      try {
-        const move = new calc.Move(gen, moveName);
-
-        // Si el movimiento no hace daño (status, Protect, Stealth Rock, etc.)
-        if (move.category === 'Status' || move.basePower === 0) {
-          html += `
-            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/60">
-              <div class="flex justify-between items-center mb-1">
-                <span class="font-semibold text-sm">${moveName}</span>
-                <span class="text-slate-400 text-sm">Status / No damage</span>
-              </div>
-              <p class="text-xs text-slate-500">This move does not deal direct damage</p>
-            </div>`;
-          return;
-        }
-
-        const result = calc.calculate(gen, attacker, defender, move, field);
-
-        // Protección extra por si damage no es un array
-        if (!result.damage || !Array.isArray(result.damage) || result.damage.length === 0) {
-          html += `
-            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/60">
-              <div class="flex justify-between items-center mb-1">
-                <span class="font-semibold text-sm">${moveName}</span>
-                <span class="text-slate-400 text-sm">No damage data</span>
-              </div>
-            </div>`;
-          return;
-        }
-
-        const range = result.range();
-        const desc = result.fullDesc();
-        const ko = result.kochance();
-
-        html += `
-          <div class="border border-slate-200 rounded-xl p-3 bg-slate-50/60">
-            <div class="flex justify-between items-center mb-1">
-              <span class="font-semibold text-sm">${moveName}</span>
-              <span class="font-bold text-orange-600">${range[0]} – ${range[1]}%</span>
-            </div>
-            <p class="text-xs text-slate-600">${desc}</p>
-            ${ko?.text ? `<p class="text-xs text-slate-500 mt-1">${ko.text}</p>` : ''}
-          </div>`;
-      } catch (err) {
-        html += `
-          <div class="border border-red-200 rounded-xl p-3 bg-red-50 text-xs text-red-600">
-            <strong>${moveName}</strong>: ${err.message || 'Error calculating'}
-          </div>`;
-      }
-    });
-
-    container.innerHTML = hasMoves ? html : `<p class="text-sm text-slate-400 text-center py-4">Sin movimientos</p>`;
-  }
-
-  // ======================================================
-  // FUNCIÓN PRINCIPAL
-  // ======================================================
-  function runCalculation() {
-    updateSprite('my');
-    updateSprite('opp');
-
-    const myPokemon  = createPokemon('my');
-    const oppPokemon = createPokemon('opp');
-
-
-    updateFinalStats('my', myPokemon);
-    updateFinalStats('opp', oppPokemon);
-
-    calculateSide(myPokemon, oppPokemon, 'my',  'results-my-to-opp');
-    calculateSide(oppPokemon, myPokemon, 'opp', 'results-opp-to-my');
-  }
-
-  function updateFinalStats(side, pokemon) {
-    if (!pokemon) return;
-    const container = document.getElementById(`${side}-final-stats`);
-    if (!container) return;
-    const source = pokemon.rawStats || pokemon.stats || {};
-    container.querySelectorAll('[data-stat]').forEach(el => {
-      el.textContent = source[el.dataset.stat] ?? '—';
-    });
-  }
-
-  // ======================================================
-  // AUTO-ACTIVAR CLIMA / TERRENO SEGÚN HABILIDAD
-  // ======================================================
-  const WEATHER_ABILITIES = {
-    'Drought': 'Sun',
-    'Drizzle': 'Rain',
-    'Sand Stream': 'Sand',
-    'Snow Warning': 'Snow',
-    'Orichalcum Pulse': 'Sun',
-    'Desolate Land': 'Sun',
-    'Primordial Sea': 'Rain'
-  };
-
-  const TERRAIN_ABILITIES = {
-    'Electric Surge': 'Electric',
-    'Grassy Surge': 'Grassy',
-    'Psychic Surge': 'Psychic',
-    'Misty Surge': 'Misty',
-    'Hadron Engine': 'Electric'
-  };
-
-  function applyWeatherTerrainFromAbility(side, abilityName) {
-    if (!abilityName) return;
-
-    // Weather
-    if (WEATHER_ABILITIES[abilityName]) {
-      const weather = WEATHER_ABILITIES[abilityName];
-      document.querySelectorAll('.field-btn[data-group="weather"]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.value === weather);
-      });
-    }
-
-    // Terrain
-    if (TERRAIN_ABILITIES[abilityName]) {
-      const terrain = TERRAIN_ABILITIES[abilityName];
-      document.querySelectorAll('.field-btn[data-group="terrain"]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.value === terrain);
-      });
-    }
-  }
-
-  // ======================================================
-  // APLICAR SET COMPLETO (corregido el mapeo de SP)
-  // ======================================================
-  function applySet(side, setData, speciesName) {
-    document.getElementById(`${side}-species`).value = speciesName;
-
-    if (setData.nature)  document.getElementById(`${side}-nature`).value = setData.nature;
-    if (setData.ability) document.getElementById(`${side}-ability`).value = setData.ability;
-    if (setData.item)    document.getElementById(`${side}-item`).value = setData.item;
-
-    // === Stat Points - mapeo robusto ===
-    if (setData.sps) {
-      // Claves posibles en el archivo de Smogon
-      const keyMap = {
-        hp: 'hp',
-        at: 'atk', atk: 'atk',
-        df: 'def', def: 'def',
-        sa: 'spa', spa: 'spa',
-        sd: 'spd', spd: 'spd',
-        sp: 'spe', spe: 'spe'
+    if (window.ChampSprites) {
+      img.src = ChampSprites.spriteUrl(name);
+      img.onerror = function () {
+        this.onerror = null;
+        this.src = ChampSprites.spriteUrlFallback(name);
       };
-
-      // Primero poner todo a 0
-      ['hp', 'atk', 'def', 'spa', 'spd', 'spe'].forEach(stat => {
-        const num = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
-        const sld = document.querySelector(`.sp-slider[data-side="${side}"][data-stat="${stat}"]`);
-        if (num) num.value = 0;
-        if (sld) sld.value = 0;
-      });
-
-      // Ahora aplicar los valores del set
-      for (const [key, value] of Object.entries(setData.sps)) {
-        const stat = keyMap[key];
-        if (!stat) continue;
-
-        const num = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
-        const sld = document.querySelector(`.sp-slider[data-side="${side}"][data-stat="${stat}"]`);
-        if (num) num.value = value;
-        if (sld) sld.value = value;
-      }
-
-      updateSPCounter(side);
+    } else {
+      img.src = `https://play.pokemonshowdown.com/sprites/dex/${toID(name)}.png`;
     }
-
-    // Moves
-    if (setData.moves && Array.isArray(setData.moves)) {
-      document.querySelectorAll(`.move-input[data-side="${side}"]`).forEach((input, i) => {
-        input.value = setData.moves[i] || '';
-      });
-    }
-
-    // Auto-activar clima / terreno
-    if (setData.ability) {
-      applyWeatherTerrainFromAbility(side, setData.ability);
-    }
-    updateSprite(side);
-    runCalculation();
+    img.classList.remove('hidden');
   }
 
-  // ======================================================
-  // AUTOCOMPLETADO BÁSICO
-  // ======================================================
-  function setupBasicAutocomplete() {
-    if (!calc.SPECIES) {
-      setTimeout(setupBasicAutocomplete, 300);
-      return;
-    }
-
-    const speciesList = Object.keys(calc.SPECIES[9] || calc.SPECIES).sort();
-    const abilityList = Object.keys(calc.ABILITIES[9] || calc.ABILITIES).sort();
-    const itemList    = Object.keys(calc.ITEMS[9] || calc.ITEMS).sort();
-    const moveList    = Object.keys(calc.MOVES[9] || calc.MOVES).sort();
-
-    function attach(input, list) {
-      if (!input.parentElement.classList.contains('autocomplete-wrapper')) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'autocomplete-wrapper';
-        input.parentNode.insertBefore(wrapper, input);
-        wrapper.appendChild(input);
-      }
-
-      const wrapper = input.parentElement;
-      let listEl = null;
-      let active = -1;
-
-      const close = () => { if (listEl) { listEl.remove(); listEl = null; active = -1; } };
-
-      input.addEventListener('input', () => {
-        const val = input.value.trim().toLowerCase();
-        if (val.length < 1) return close();
-
-        const matches = list.filter(i => i.toLowerCase().includes(val)).slice(0, 12);
-        close();
-        if (!matches.length) return;
-
-        listEl = document.createElement('div');
-        listEl.className = 'autocomplete-list';
-
-        matches.forEach(item => {
-          const div = document.createElement('div');
-          div.className = 'autocomplete-item';
-          div.textContent = item;
-          div.addEventListener('mousedown', e => {
-            e.preventDefault();
-            input.value = item;
-            close();
-            input.dispatchEvent(new Event('change'));
-          });
-          listEl.appendChild(div);
-        });
-        wrapper.appendChild(listEl);
-      });
-
-      input.addEventListener('keydown', e => {
-        if (!listEl) return;
-        const items = listEl.querySelectorAll('.autocomplete-item');
-        if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); }
-        else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); }
-        else if (e.key === 'Enter' && active >= 0) {
-          e.preventDefault();
-          items[active].dispatchEvent(new Event('mousedown'));
-        } else if (e.key === 'Escape') close();
-        items.forEach((it, i) => it.classList.toggle('active', i === active));
-      });
-
-      document.addEventListener('click', e => { if (!wrapper.contains(e.target)) close(); });
-    }
-
-    document.querySelectorAll('#my-species, #opp-species').forEach(i => attach(i, speciesList));
-    document.querySelectorAll('#my-ability, #opp-ability').forEach(i => attach(i, abilityList));
-    document.querySelectorAll('#my-item, #opp-item').forEach(i => attach(i, itemList));
-    document.querySelectorAll('.move-input').forEach(i => attach(i, moveList));
-  }
-
-  // ======================================================
-  // AUTOCOMPLETADO DE SETS
-  // ======================================================
-  function setupSetsAutocomplete() {
-  if (typeof SETDEX_CHAMPIONS === 'undefined') {
-    console.warn('SETDEX_CHAMPIONS aún no disponible...');
-    setTimeout(setupSetsAutocomplete, 500);
-    return;
-  }
-
-  console.log('%c[Sets] Datos de Champions cargados', 'color: #16a34a; font-weight: bold;');
-
-  // Lista de todos los sets
-  const allSets = [];
-  for (const species in SETDEX_CHAMPIONS) {
-    for (const setName in SETDEX_CHAMPIONS[species]) {
-      allSets.push({
-        label: `${species} ${setName}`,
-        species,
-        setName,
-        data: SETDEX_CHAMPIONS[species][setName],
-        isSet: true
-      });
-    }
-  }
-
-  // También añadimos todas las species en blanco (sin set)
-  const allSpecies = Object.keys(calc.SPECIES[9] || calc.SPECIES || {}).sort();
-  allSpecies.forEach(sp => {
-    allSets.push({
-      label: sp,
-      species: sp,
-      setName: '(Blank)',
-      data: null,
-      isSet: false
+  // ---------- SP sync ----------
+  document.querySelectorAll('.sp-slider, .sp-input').forEach(el => {
+    el.addEventListener('input', function () {
+      const side = this.dataset.side;
+      const stat = this.dataset.stat;
+      const val = clampSP(this.value);
+      const slider = document.querySelector(`.sp-slider[data-side="${side}"][data-stat="${stat}"]`);
+      const input = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
+      if (slider) slider.value = val;
+      if (input) input.value = val;
+      updateSPTotal(side);
+      runCalculation();
     });
   });
+  updateSPTotal('p1');
+  updateSPTotal('p2');
 
-  function attachSets(input, side) {
-    if (!input.parentElement.classList.contains('autocomplete-wrapper')) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'autocomplete-wrapper';
-      input.parentNode.insertBefore(wrapper, input);
-      wrapper.appendChild(input);
-    }
-
-    const wrapper = input.parentElement;
-    let listEl = null;
-    let active = -1;
-
-    const close = () => { if (listEl) { listEl.remove(); listEl = null; active = -1; } };
-
-    input.addEventListener('input', () => {
-      const val = input.value.trim().toLowerCase();
-      if (val.length < 1) return close();
-
-      // Priorizamos sets que coincidan + species en blanco
-      const matches = allSets
-        .filter(s => s.label.toLowerCase().includes(val) || s.species.toLowerCase().includes(val))
-        .slice(0, 18);
-
-      close();
-      if (!matches.length) return;
-
-      listEl = document.createElement('div');
-      listEl.className = 'autocomplete-list';
-
-      matches.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'autocomplete-item';
-
-        if (item.isSet) {
-          div.innerHTML = `<strong>${item.species}</strong> <span class="text-slate-500 text-xs">${item.setName}</span>`;
-        } else {
-          div.innerHTML = `<strong>${item.species}</strong> <span class="text-slate-400 text-xs">(Blank)</span>`;
-        }
-
-        div.addEventListener('mousedown', e => {
-          e.preventDefault();
-
-          if (item.isSet && item.data) {
-            // Aplicar set completo
-            applySet(side, item.data, item.species);
-          } else {
-            // Solo poner el nombre (set en blanco)
-            document.getElementById(`${side}-species`).value = item.species;
-            // Limpiar el resto de campos para que sea realmente "blank"
-            document.getElementById(`${side}-ability`).value = '';
-            document.getElementById(`${side}-item`).value = '';
-            document.getElementById(`${side}-nature`).value = 'Serious';
-
-            // Poner todos los SP a 0
-            ['hp', 'atk', 'def', 'spa', 'spd', 'spe'].forEach(stat => {
-              const num = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
-              const sld = document.querySelector(`.sp-slider[data-side="${side}"][data-stat="${stat}"]`);
-              if (num) num.value = 0;
-              if (sld) sld.value = 0;
-            });
-            updateSPCounter(side);
-
-            // Limpiar moves
-            document.querySelectorAll(`.move-input[data-side="${side}"]`).forEach(inp => inp.value = '');
-          }
-
-          input.value = item.species;
-          close();
-          runCalculation();
-        });
-
-        listEl.appendChild(div);
-      });
-
-      wrapper.appendChild(listEl);
-    });
-
-    input.addEventListener('keydown', e => {
-      if (!listEl) return;
-      const items = listEl.querySelectorAll('.autocomplete-item');
-      if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); }
-      else if (e.key === 'Enter' && active >= 0) {
-        e.preventDefault();
-        items[active].dispatchEvent(new Event('mousedown'));
-      } else if (e.key === 'Escape') close();
-      items.forEach((it, i) => it.classList.toggle('active', i === active));
-    });
-
-    document.addEventListener('click', e => { if (!wrapper.contains(e.target)) close(); });
-  }
-
-  const myInput  = document.getElementById('my-species');
-  const oppInput = document.getElementById('opp-species');
-  if (myInput)  attachSets(myInput, 'my');
-  if (oppInput) attachSets(oppInput, 'opp');
-}
-
-  // ======================================================
-  // EVENTOS
-  // ======================================================
+  // ---------- Field buttons ----------
   document.querySelectorAll('.field-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const group = btn.dataset.group;
       if (group) {
         document.querySelectorAll(`.field-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
-      } else {
-        btn.parentElement.querySelectorAll('.field-btn').forEach(b => b.classList.remove('active'));
       }
       btn.classList.add('active');
       runCalculation();
     });
   });
 
-  const watch = [
-  '#my-species', '#my-nature', '#my-ability', '#my-item',
-  '#opp-species', '#opp-nature', '#opp-ability', '#opp-item',
-  '.move-input',
-  '#my-helping-hand', '#opp-helping-hand',
-  '#my-reflect', '#opp-reflect',
-  '#my-lightscreen', '#opp-lightscreen',
-  '#my-auroraveil', '#opp-auroraveil',
-  '#my-tailwind', '#opp-tailwind',
-  '#my-friendguard', '#opp-friendguard'
-];
-
-  document.querySelectorAll(watch.join(',')).forEach(el => {
+  // ---------- Watch inputs ----------
+  const watch = document.querySelectorAll(
+    '#p1-species, #p1-nature, #p1-ability, #p1-item, ' +
+    '#p2-species, #p2-nature, #p2-ability, #p2-item, ' +
+    '.move-input, .boost-select, ' +
+    '#field-helping-hand, #field-helping-hand-def, #field-friend-guard, ' +
+    '#field-aurora-veil, #field-reflect, #field-light-screen, #field-fairy-aura'
+  );
+  watch.forEach(el => {
     el.addEventListener('change', runCalculation);
     el.addEventListener('input', debounce(runCalculation, 400));
   });
 
+  document.getElementById('p1-species')?.addEventListener('input', () => updateSprite('p1'));
+  document.getElementById('p2-species')?.addEventListener('input', () => updateSprite('p2'));
+
   document.getElementById('btn-copy-result')?.addEventListener('click', () => {
-    const text = (document.getElementById('results-my-to-opp')?.innerText || '') + '\n\n' +
-                 (document.getElementById('results-opp-to-my')?.innerText || '');
+    const text = document.getElementById('damage-output')?.innerText || '';
     navigator.clipboard.writeText(text).then(() => {
       const btn = document.getElementById('btn-copy-result');
-      const orig = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Copied!';
-      setTimeout(() => btn.innerHTML = orig, 1500);
+      const o = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Copiado';
+      setTimeout(() => { btn.innerHTML = o; }, 1500);
     });
   });
-  function buildCalcNoteText(side = 'my') {
-  // Ajusta estos IDs a los de tu calc si son distintos
-  const mySpecies  = document.getElementById('my-species')?.value?.trim() || 'Mi Pokémon';
-  const oppSpecies = document.getElementById('opp-species')?.value?.trim() || 'Rival';
 
-  // Resultados: usa los contenedores reales de tu calc
-  const resultsMyToOpp = document.getElementById('results-my-to-opp')?.innerText?.trim() || '';
-  const resultsOppToMy = document.getElementById('results-opp-to-my')?.innerText?.trim() || '';
+  // ---------- Build Pokemon ----------
+  function buildPokemon(side) {
+    const gen = calc.Generations.get(9);
+    const name = document.getElementById(side + '-species')?.value?.trim();
+    if (!name) return null;
 
-  // Si hay un resultado seleccionado / principal, priorízalo
-  let main = '';
-  if (side === 'my' && resultsMyToOpp) {
-    main = `${mySpecies} → ${oppSpecies}:\n${resultsMyToOpp.slice(0, 500)}`;
-  } else if (resultsOppToMy) {
-    main = `${oppSpecies} → ${mySpecies}:\n${resultsOppToMy.slice(0, 500)}`;
-  } else {
-    main = resultsMyToOpp || resultsOppToMy || 'Cálculo guardado (sin texto de resultado detectado).';
+    const sps = readSP(side);
+    const boosts = readBoosts(side);
+
+    const opts = {
+      level: 50,
+      nature: document.getElementById(side + '-nature')?.value || 'Serious',
+      ability: document.getElementById(side + '-ability')?.value?.trim() || undefined,
+      item: document.getElementById(side + '-item')?.value?.trim() || undefined,
+      evs: {
+        hp: spToEV(sps.hp),
+        atk: spToEV(sps.atk),
+        def: spToEV(sps.def),
+        spa: spToEV(sps.spa),
+        spd: spToEV(sps.spd),
+        spe: spToEV(sps.spe)
+      },
+      ivs: { hp: 31, atk: 31, def: 31, spa: 31, spd: 31, spe: 31 },
+      boosts
+    };
+
+    // limpiar ability/item vacíos
+    if (!opts.ability) delete opts.ability;
+    if (!opts.item) delete opts.item;
+    if (!Object.keys(boosts).length) delete opts.boosts;
+
+    return new calc.Pokemon(gen, name, opts);
   }
 
-  return main.trim();
-}
+  function buildField() {
+    const weatherBtn = document.querySelector('.field-btn[data-group="weather"].active');
+    const terrainBtn = document.querySelector('.field-btn[data-group="terrain"].active');
+    const weather = weatherBtn?.dataset.value;
+    const terrain = terrainBtn?.dataset.value;
 
-function saveCalcAsNote(side = 'my') {
-  const prefix = side === 'my' ? 'my' : 'opp';
-  const species = document.getElementById(`${prefix}-species`)?.value?.trim();
-  if (!species) {
-    alert('Selecciona un Pokémon primero.');
-    return;
+    return new calc.Field({
+      gameType: 'Doubles',
+      weather: (!weather || weather === 'none') ? undefined : weather,
+      terrain: (!terrain || terrain === 'none') ? undefined : terrain,
+      isFairyAura: document.getElementById('field-fairy-aura')?.checked || false,
+      attackerSide: {
+        isHelpingHand: document.getElementById('field-helping-hand')?.checked || false
+      },
+      defenderSide: {
+        isHelpingHand: document.getElementById('field-helping-hand-def')?.checked || false,
+        isFriendGuard: document.getElementById('field-friend-guard')?.checked || false,
+        isReflect: document.getElementById('field-reflect')?.checked || false,
+        isLightScreen: document.getElementById('field-light-screen')?.checked || false,
+        isAuroraVeil: document.getElementById('field-aurora-veil')?.checked || false
+      }
+    });
   }
 
-  const text = buildCalcNoteText(side);
-  const note = {
-    id: 'n_' + Date.now(),
-    text,
-    date: new Date().toISOString(),
-    source: 'calc',
-    species // para emparejar en el teambuilder
-  };
+  // ---------- Notes / Transfer ----------
+  function saveSingleNote(species, moveName, summary) {
+    if (!species) return;
+    const note = {
+      id: 'n_' + Date.now(),
+      text: `${moveName}: ${summary}`,
+      date: new Date().toISOString(),
+      source: 'calc',
+      species
+    };
+    let queue = [];
+    try { queue = JSON.parse(localStorage.getItem('champions_pending_notes') || '[]'); } catch (e) {}
+    queue.push(note);
+    localStorage.setItem('champions_pending_notes', JSON.stringify(queue));
+    alert(`Nota guardada:\n${note.text}`);
+  }
 
-  // Cola de notas pendientes (pueden acumularse varias)
-  let queue = [];
-  try {
-    queue = JSON.parse(localStorage.getItem('champions_pending_notes') || '[]');
-  } catch (e) {}
-  queue.push(note);
-  localStorage.setItem('champions_pending_notes', JSON.stringify(queue));
-
-  console.log('[Calc] Nota guardada:', note);
-  alert(`Nota guardada para "${species}".\nÁbrela en el Teambuilder (se asignará a un Pokémon con el mismo nombre o al editarlo).`);
-}
-
-document.getElementById('btn-save-note-my')?.addEventListener('click', () => saveCalcAsNote('my'));
-
-  // ======================================================
-// ENVIAR POKÉMON AL TEAMBUILDER
-// ======================================================
-function sendPokemonToTeambuilder(side = 'my') {
-  const prefix = side === 'my' ? 'my' : 'opp';
-
-  // Intentar varios IDs posibles por si el HTML usa nombres distintos
-  const getVal = (ids) => {
-    for (const id of ids) {
-      const el = document.getElementById(id);
-      if (el && el.value != null && String(el.value).trim() !== '') return String(el.value).trim();
+  function sendToTeam(side) {
+    const name = document.getElementById(side + '-species')?.value?.trim();
+    if (!name) {
+      alert('Selecciona un Pokémon primero.');
+      return;
     }
-    return '';
-  };
-
-  const getSP = (stat) => {
-    const candidates = [
-      document.querySelector(`#${prefix}-sp-controls .edit-sp-input[data-stat="${stat}"]`),
-      document.querySelector(`.${prefix}-sp-input[data-stat="${stat}"]`),
-      document.querySelector(`[data-side="${prefix}"][data-stat="${stat}"]`),
-      document.getElementById(`${prefix}-${stat}`),
-      document.getElementById(`${prefix}-sp-${stat}`)
-    ];
-    for (const el of candidates) {
-      if (el && el.value != null) return Number(el.value) || 0;
-    }
-    return 0;
-  };
-
-  const species = getVal([`${prefix}-species`, `species-${prefix}`, `${prefix}Species`]);
-  if (!species) {
-    alert('Selecciona un Pokémon primero.');
-    return;
+    const sps = readSP(side);
+    const poke = {
+      species: name,
+      nature: document.getElementById(side + '-nature')?.value || 'Serious',
+      ability: document.getElementById(side + '-ability')?.value?.trim() || '',
+      item: document.getElementById(side + '-item')?.value?.trim() || '',
+      sps,
+      moves: [
+        document.getElementById(side + '-move1')?.value?.trim() || '',
+        document.getElementById(side + '-move2')?.value?.trim() || '',
+        document.getElementById(side + '-move3')?.value?.trim() || '',
+        document.getElementById(side + '-move4')?.value?.trim() || ''
+      ],
+      notes: [],
+      transferredAt: Date.now()
+    };
+    localStorage.setItem('champions_transfer_poke', JSON.stringify(poke));
+    console.log('[Calc → Team]', poke);
+    alert(`"${name}" listo para el Teambuilder.\nAbre teambuilder.html con el mismo Live Server.`);
   }
 
-  const poke = {
-    species,
-    nature:  getVal([`${prefix}-nature`, `nature-${prefix}`]) || 'Serious',
-    ability: getVal([`${prefix}-ability`, `ability-${prefix}`]),
-    item:    getVal([`${prefix}-item`, `item-${prefix}`]),
-    sps: {
-      hp:  getSP('hp'),
-      atk: getSP('atk'),
-      def: getSP('def'),
-      spa: getSP('spa'),
-      spd: getSP('spd'),
-      spe: getSP('spe')
-    },
-    moves: [
-      getVal([`${prefix}-move1`, `${prefix}-move-1`, `move1-${prefix}`]),
-      getVal([`${prefix}-move2`, `${prefix}-move-2`, `move2-${prefix}`]),
-      getVal([`${prefix}-move3`, `${prefix}-move-3`, `move3-${prefix}`]),
-      getVal([`${prefix}-move4`, `${prefix}-move-4`, `move4-${prefix}`])
-    ],
-    transferredAt: Date.now()
-  };
+  document.getElementById('btn-send-my-to-team')?.addEventListener('click', () => sendToTeam('p1'));
+  document.getElementById('btn-send-opp-to-team')?.addEventListener('click', () => sendToTeam('p2'));
 
-  localStorage.setItem('champions_transfer_poke', JSON.stringify(poke));
-  console.log('[Calc → Team] Guardado en localStorage:', poke);
-  alert(`"${species}" listo para el Teambuilder.\nAbre o recarga el Teambuilder.`);
-}
+  // ---------- Calculation ----------
+  function calcSideMoves(gen, attacker, defender, field, side, attackerName) {
+    const inputs = document.querySelectorAll(`.move-input[data-side="${side}"]`);
+    let blocks = [];
+    inputs.forEach(input => {
+      const moveName = input.value?.trim();
+      if (!moveName) return;
+      try {
+        const move = new calc.Move(gen, moveName);
+        const result = calc.calculate(gen, attacker, defender, move, field);
+        const range = result.range();
+        const desc = result.fullDesc();
+        let koText = '';
+        try {
+          const ko = result.kochance();
+          if (ko && ko.text) koText = ko.text;
+        } catch (e) {}
+        const summary = `${range[0]} – ${range[1]}%` + (koText ? ` (${koText})` : '');
+        blocks.push({ moveName, range, desc, koText, summary, attackerName });
+      } catch (err) {
+        blocks.push({ error: true, moveName, message: err.message || 'Invalid move' });
+      }
+    });
+    return blocks;
+  }
 
-document.getElementById('btn-send-my-to-team')?.addEventListener('click', () => sendPokemonToTeambuilder('my'));
-document.getElementById('btn-send-opp-to-team')?.addEventListener('click', () => sendPokemonToTeambuilder('opp'));
+  function renderBlocks(title, blocks, colorClass) {
+    if (!blocks.length) return '';
+    let html = `<div class="mb-4"><h4 class="font-semibold text-sm ${colorClass} mb-2">${title}</h4><div class="space-y-2">`;
+    blocks.forEach(b => {
+      if (b.error) {
+        html += `<div class="border border-red-200 rounded-xl p-3 bg-red-50 text-sm text-red-600"><strong>${b.moveName}</strong>: ${b.message}</div>`;
+        return;
+      }
+      html += `
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+            <span class="font-semibold text-slate-800">${b.moveName}</span>
+            <span class="text-orange-600 font-bold text-lg">${b.range[0]}&nbsp;–&nbsp;${b.range[1]}%</span>
+          </div>
+          <p class="text-sm text-slate-600 mb-1">${b.desc}</p>
+          ${b.koText ? `<p class="text-xs text-slate-500 mb-2">${b.koText}</p>` : ''}
+          <button type="button" class="text-[11px] text-orange-600 hover:underline font-semibold btn-note"
+            data-species="${b.attackerName}" data-move="${b.moveName}" data-summary="${b.summary.replace(/"/g, '&quot;')}">
+            <i class="fa-solid fa-note-sticky mr-1"></i>Guardar esta línea como nota
+          </button>
+        </div>`;
+    });
+    html += '</div></div>';
+    return html;
+  }
 
-  // ======================================================
-  // INICIALIZACIÓN
-  // ======================================================
-  setupSPControls();
-  updateSPCounter('my');
-  updateSPCounter('opp');
-  setupBasicAutocomplete();
-  setupSetsAutocomplete();
+  function runCalculation() {
+    const output = document.getElementById('damage-output');
+    if (!output) return;
+
+    try {
+      const gen = calc.Generations.get(9);
+      const p1Name = document.getElementById('p1-species')?.value?.trim();
+      const p2Name = document.getElementById('p2-species')?.value?.trim();
+
+      if (!p1Name || !p2Name) {
+        output.innerHTML = `<div class="text-center text-slate-400 py-8"><p>Elige ambos Pokémon para calcular</p></div>`;
+        return;
+      }
+
+      const attacker = buildPokemon('p1');
+      const defender = buildPokemon('p2');
+      if (!attacker || !defender) {
+        output.innerHTML = `<div class="text-center text-red-500 py-6"><p>No se pudo crear uno de los Pokémon (nombre en inglés)</p></div>`;
+        return;
+      }
+
+      const field = buildField();
+
+      // Mi Pokémon → Adversario
+      const offBlocks = calcSideMoves(gen, attacker, defender, field, 'p1', p1Name);
+
+      // Adversario → Mi Pokémon (field sides invertidos de forma simple: mismo field)
+      const fieldRev = buildField();
+      // Intercambiar helping hand de lados para el cálculo inverso
+      const tmpHH = fieldRev.attackerSide.isHelpingHand;
+      fieldRev.attackerSide.isHelpingHand = fieldRev.defenderSide.isHelpingHand;
+      fieldRev.defenderSide.isHelpingHand = tmpHH;
+
+      const defBlocks = calcSideMoves(gen, defender, attacker, fieldRev, 'p2', p2Name);
+
+      if (!offBlocks.length && !defBlocks.length) {
+        output.innerHTML = `<div class="text-center text-slate-400 py-6"><p>Escribe al menos un movimiento</p></div>`;
+        return;
+      }
+
+      let html = '';
+      html += renderBlocks(`${p1Name} → ${p2Name}`, offBlocks, 'text-orange-700');
+      html += renderBlocks(`${p2Name} → ${p1Name}`, defBlocks, 'text-slate-700');
+      output.innerHTML = html;
+
+      output.querySelectorAll('.btn-note').forEach(btn => {
+        btn.addEventListener('click', () => {
+          saveSingleNote(btn.dataset.species, btn.dataset.move, btn.dataset.summary);
+        });
+      });
+    } catch (err) {
+      console.error(err);
+      output.innerHTML = `<div class="text-center text-red-500 py-6">
+        <p class="font-medium">Error</p>
+        <p class="text-sm mt-1">${err.message || err}</p>
+        <p class="text-xs mt-2 text-slate-400">Usa nombres en inglés (Gholdengo, Incineroar, Make It Rain…)</p>
+      </div>`;
+    }
+  }
+
+  // Move autocomplete
+  if (typeof setupMoveAutocomplete === 'function') {
+    setupMoveAutocomplete('.move-input, #p1-move1, #p1-move2, #p1-move3, #p1-move4, #p2-move1, #p2-move2, #p2-move3, #p2-move4');
+  }
+
+  window.runCalculation = runCalculation;
   runCalculation();
 });

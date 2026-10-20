@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
           : '';
         slot.innerHTML = `
           ${noteBadge}
-          <img src="https://play.pokemonshowdown.com/sprites/gen5/${toID(poke.species)}.png"
+          <img src="${(window.ChampSprites?ChampSprites.spriteUrl(poke.species):'https://play.pokemonshowdown.com/sprites/dex/'+toID(poke.species)+'.png')}"
                alt="${poke.species}" class="w-16 h-16 object-contain mb-1" onerror="this.style.display='none'">
           <p class="font-semibold text-sm text-slate-800 leading-tight">${poke.species}</p>
           <p class="text-xs text-slate-500 mt-0.5 truncate w-full px-1">${poke.item || 'Sin objeto'}</p>
@@ -298,10 +298,13 @@ document.addEventListener('DOMContentLoaded', () => {
       img.classList.add('hidden');
       return;
     }
-    img.src = `https://play.pokemonshowdown.com/sprites/gen5/${toID(name)}.png`;
+    img.src = (window.ChampSprites ? ChampSprites.spriteUrl(name) : `https://play.pokemonshowdown.com/sprites/dex/${toID(name)}.png`);
+    img.onerror = function() {
+      if (window.ChampSprites) this.src = ChampSprites.spriteUrlFallback(name);
+      else this.classList.add('hidden');
+    };
     img.alt = name;
     img.classList.remove('hidden');
-    img.onerror = () => img.classList.add('hidden');
   }
 
   // ---------- Notas ----------
@@ -727,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `
         <div class="flex items-center justify-between p-3 rounded-xl border ${bg}">
           <div class="flex items-center gap-3">
-            <img src="https://play.pokemonshowdown.com/sprites/gen5/${toID(t.name)}.png" class="w-9 h-9 object-contain" onerror="this.style.display='none'">
+            <img src="${(window.ChampSprites?ChampSprites.spriteUrl(t.name):'https://play.pokemonshowdown.com/sprites/dex/'+toID(t.name)+'.png')}" class="w-9 h-9 object-contain" onerror="this.style.display='none'">
             <div>
               <p class="font-semibold text-sm">${t.name}</p>
               <p class="text-[11px] text-slate-500">${(t.tags || []).join(' · ')}</p>
@@ -901,12 +904,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const count = (data.team || []).filter(p => p && p.species).length;
         const div = document.createElement('div');
         div.className = 'flex items-center justify-between p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition';
+        const sprites = (data.team || [])
+          .filter(p => p && p.species)
+          .slice(0, 6)
+          .map(p => {
+            if (window.ChampSprites) return ChampSprites.spriteImgHtml(p.species, 'w-7 h-7 object-contain');
+            const id = toID(p.species);
+            return `<img src="https://play.pokemonshowdown.com/sprites/dex/${id}.png" class="w-7 h-7 object-contain" onerror="this.style.display='none'">`;
+          })
+          .join('');
         div.innerHTML = `
-          <div>
-            <p class="font-medium text-sm text-slate-800">${name}</p>
-            <p class="text-xs text-slate-500">${count} Pokémon · ${date}</p>
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="flex -space-x-1 shrink-0">${sprites}</div>
+            <div class="min-w-0">
+              <p class="font-medium text-sm text-slate-800 truncate">${name}</p>
+              <p class="text-xs text-slate-500">${count} Pokémon · ${date}</p>
+            </div>
           </div>
-          <div class="flex gap-2">
+          <div class="flex gap-2 shrink-0">
             <button class="load-btn px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs rounded-lg font-medium" data-name="${name}">Cargar</button>
             <button class="delete-btn px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs rounded-lg" data-name="${name}"><i class="fa-solid fa-trash"></i></button>
           </div>`;
@@ -1066,6 +1081,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- Init ----------
   setupEditSPControls();
   setupSetsAutocomplete();
+  if (typeof setupMoveAutocomplete === 'function') {
+    setupMoveAutocomplete('#edit-move1, #edit-move2, #edit-move3, #edit-move4, .edit-move');
+  }
   renderTeamSlots();
   updateAllAnalysis();
   absorbPendingNotes();
