@@ -252,26 +252,71 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- Calculation ----------
   function calcSideMoves(gen, attacker, defender, field, side, attackerName) {
     const inputs = document.querySelectorAll(`.move-input[data-side="${side}"]`);
-    let blocks = [];
+    const blocks = [];
+
     inputs.forEach(input => {
       const moveName = input.value?.trim();
       if (!moveName) return;
+
       try {
         const move = new calc.Move(gen, moveName);
+
+        // Movimientos de estado (Nasty Plot, Protect, Tailwind…): no mostrar en resultados de daño
+        const category = (move.category || '').toString().toLowerCase();
+        if (category === 'status' || move.category === calc.MoveCategory?.Status) {
+          return;
+        }
+        // basePower 0 suele ser status / no dañino
+        if (move.bp === 0 || move.basePower === 0) {
+          // algunas moves de daño tienen bp dinámico; si category no es status, seguimos
+          if (category === 'status' || !category) {
+            // si no hay categoría clara y bp 0, omitir
+            if (category === 'status') return;
+          }
+        }
+        if (category === 'status') return;
+
         const result = calc.calculate(gen, attacker, defender, move, field);
+
+        // Inmunidad / 0 daño: no listar
+        const damage = result.damage;
+        if (Array.isArray(damage) && damage.length && damage.every(d => !d || d === 0)) {
+          return;
+        }
+
         const range = result.range();
+        // 0–0 %: no listar (status residual o inmunidad)
+        if (!range || (range[0] === 0 && range[1] === 0)) {
+          return;
+        }
+
         const desc = result.fullDesc();
         let koText = '';
         try {
           const ko = result.kochance();
           if (ko && ko.text) koText = ko.text;
-        } catch (e) {}
+        } catch (e) {
+          // kochance a veces falla con daño 0; ya filtramos arriba
+        }
+
         const summary = `${range[0]} – ${range[1]}%` + (koText ? ` (${koText})` : '');
         blocks.push({ moveName, range, desc, koText, summary, attackerName });
       } catch (err) {
-        blocks.push({ error: true, moveName, message: err.message || 'Invalid move' });
+        const msg = (err && err.message) ? String(err.message) : '';
+        // Errores típicos de inmunidad / Fake Out vs Ghost / damage[length-1]===0 → omitir
+        if (
+          /damage\[/i.test(msg) ||
+          /immune/i.test(msg) ||
+          /no damage/i.test(msg) ||
+          /=== 0/i.test(msg)
+        ) {
+          return;
+        }
+        // Solo errores “reales” (nombre inválido, etc.)
+        blocks.push({ error: true, moveName, message: msg || 'Invalid move' });
       }
     });
+
     return blocks;
   }
 
@@ -280,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let html = `<div class="mb-4"><h4 class="font-semibold text-sm ${colorClass} mb-2">${title}</h4><div class="space-y-2">`;
     blocks.forEach(b => {
       if (b.error) {
-        html += `<div class="border border-red-200 rounded-xl p-3 bg-red-50 text-sm text-red-600"><strong>${b.moveName}</strong>: ${b.message}</div>`;
+        html += `<div class="border border-amber-200 rounded-xl p-3 bg-amber-50 text-sm text-amber-800"><strong>${b.moveName}</strong>: ${b.message}</div>`;
         return;
       }
       html += `
@@ -337,7 +382,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const defBlocks = calcSideMoves(gen, defender, attacker, fieldRev, 'p2', p2Name);
 
       if (!offBlocks.length && !defBlocks.length) {
-        output.innerHTML = `<div class="text-center text-slate-400 py-6"><p>Escribe al menos un movimiento</p></div>`;
+        output.innerHTML = `<div class="text-center text-slate-400 py-6">
+          <p>No hay movimientos ofensivos con daño para mostrar</p>
+          <p class="text-xs mt-1">(Estado, inmunidades y 0 daño se ocultan)</p>
+        </div>`;
         return;
       }
 
@@ -365,6 +413,159 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof setupMoveAutocomplete === 'function') {
     setupMoveAutocomplete('.move-input, #p1-move1, #p1-move2, #p1-move3, #p1-move4, #p2-move1, #p2-move2, #p2-move3, #p2-move4');
   }
+
+  // ---------- Autocomplete de Pokémon + sets ----------
+  function setupSpeciesAutocomplete() {
+    if (typeof calc === 'undefined') {
+      setTimeout(setupSpeciesAutocomplete, 400);
+      return;
+    }
+
+    const entries = [];
+
+    if (typeof SETDEX_CHAMPIONS !== 'undefined') {
+      for (const species in SETDEX_CHAMPIONS) {
+        for (const setName in SETDEX_CHAMPIONS[species]) {
+          entries.push({
+            label: `${species} ${setName}`,
+            species,
+            setName,
+            data: SETDEX_CHAMPIONS[species][setName],
+            isSet: true
+          });
+        }
+      }
+    }
+
+    try {
+      const unique = new Set();
+      if (calc.SPECIES && calc.SPECIES[9]) {
+        for (const id in calc.SPECIES[9]) {
+          const s = calc.SPECIES[9][id];
+          if (s && s.name) unique.add(s.name);
+        }
+      }
+      if (typeof SETDEX_CHAMPIONS !== 'undefined') {
+        Object.keys(SETDEX_CHAMPIONS).forEach(sp => unique.add(sp));
+      }
+      [...unique].sort().forEach(sp => {
+        entries.push({ label: sp, species: sp, setName: '(Blank)', data: null, isSet: false });
+      });
+    } catch (e) {
+      console.warn('[Calc] species list:', e);
+    }
+
+    function applySetToSide(side, setData, speciesName) {
+      document.getElementById(side + '-species').value = speciesName;
+      if (setData) {
+        if (setData.nature) document.getElementById(side + '-nature').value = setData.nature;
+        if (setData.ability) document.getElementById(side + '-ability').value = setData.ability;
+        if (setData.item) document.getElementById(side + '-item').value = setData.item;
+        if (setData.sps) {
+          const keyMap = { hp: 'hp', at: 'atk', atk: 'atk', df: 'def', def: 'def', sa: 'spa', spa: 'spa', sd: 'spd', spd: 'spd', sp: 'spe', spe: 'spe' };
+          ['hp', 'atk', 'def', 'spa', 'spd', 'spe'].forEach(stat => {
+            const slider = document.querySelector(`.sp-slider[data-side="${side}"][data-stat="${stat}"]`);
+            const input = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
+            if (slider) slider.value = 0;
+            if (input) input.value = 0;
+          });
+          for (const [key, value] of Object.entries(setData.sps)) {
+            const stat = keyMap[key];
+            if (!stat) continue;
+            const val = clampSP(value);
+            const slider = document.querySelector(`.sp-slider[data-side="${side}"][data-stat="${stat}"]`);
+            const input = document.querySelector(`.sp-input[data-side="${side}"][data-stat="${stat}"]`);
+            if (slider) slider.value = val;
+            if (input) input.value = val;
+          }
+          updateSPTotal(side);
+        }
+        if (setData.moves) {
+          for (let i = 0; i < 4; i++) {
+            const el = document.getElementById(`${side}-move${i + 1}`);
+            if (el) el.value = setData.moves[i] || '';
+          }
+        }
+      }
+      updateSprite(side);
+      runCalculation();
+    }
+
+    function bindSpeciesInput(inputId, side) {
+      const input = document.getElementById(inputId);
+      if (!input || input.dataset.speciesAc === '1') return;
+      input.dataset.speciesAc = '1';
+
+      if (!input.parentElement.classList.contains('species-ac-wrapper')) {
+        const wrap = document.createElement('div');
+        wrap.className = 'species-ac-wrapper relative w-full';
+        input.parentNode.insertBefore(wrap, input);
+        wrap.appendChild(input);
+      }
+      const wrapper = input.parentElement;
+      let listEl = null;
+      let active = -1;
+
+      const close = () => {
+        if (listEl) listEl.remove();
+        listEl = null;
+        active = -1;
+      };
+
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        if (q.length < 1) return close();
+        const matches = entries
+          .filter(e => e.label.toLowerCase().includes(q) || e.species.toLowerCase().includes(q))
+          .slice(0, 16);
+        close();
+        if (!matches.length) return;
+
+        listEl = document.createElement('div');
+        listEl.className = 'autocomplete-list absolute z-[60] left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-lg max-h-56 overflow-y-auto mt-1';
+
+        matches.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-item px-3 py-2 text-sm cursor-pointer hover:bg-orange-50';
+          div.innerHTML = item.isSet
+            ? `<strong>${item.species}</strong> <span class="text-slate-500 text-xs">${item.setName}</span>`
+            : `<strong>${item.species}</strong> <span class="text-slate-400 text-xs">(Blank)</span>`;
+          div.addEventListener('mousedown', e => {
+            e.preventDefault();
+            if (item.isSet && item.data) applySetToSide(side, item.data, item.species);
+            else {
+              input.value = item.species;
+              updateSprite(side);
+              runCalculation();
+            }
+            close();
+          });
+          listEl.appendChild(div);
+        });
+        wrapper.appendChild(listEl);
+      });
+
+      input.addEventListener('keydown', e => {
+        if (!listEl) return;
+        const items = listEl.querySelectorAll('.autocomplete-item');
+        if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); }
+        else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); items[active].dispatchEvent(new Event('mousedown')); }
+        else if (e.key === 'Escape') close();
+        items.forEach((it, i) => it.classList.toggle('bg-orange-100', i === active));
+      });
+
+      document.addEventListener('click', e => {
+        if (!wrapper.contains(e.target)) close();
+      });
+    }
+
+    bindSpeciesInput('p1-species', 'p1');
+    bindSpeciesInput('p2-species', 'p2');
+    console.log('%c[Calc] Autocomplete especies:', 'color: #16a34a', entries.length, 'entradas');
+  }
+
+  setupSpeciesAutocomplete();
 
   window.runCalculation = runCalculation;
   runCalculation();
