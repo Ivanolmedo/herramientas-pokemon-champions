@@ -216,13 +216,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try { queue = JSON.parse(localStorage.getItem('champions_pending_notes') || '[]'); } catch (e) {}
     queue.push(note);
     localStorage.setItem('champions_pending_notes', JSON.stringify(queue));
-    alert(`Nota guardada:\n${note.text}`);
+    if (typeof showToast === 'function') showToast('Nota guardada: ' + note.text, 'success'); else alert('Nota guardada');
   }
 
   function sendToTeam(side) {
     const name = document.getElementById(side + '-species')?.value?.trim();
     if (!name) {
-      alert('Selecciona un Pokémon primero.');
+      if (typeof showToast === 'function') showToast('Selecciona un Pokémon primero', 'warn'); else alert('Selecciona un Pokémon primero.');
       return;
     }
     const sps = readSP(side);
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     localStorage.setItem('champions_transfer_poke', JSON.stringify(poke));
     console.log('[Calc → Team]', poke);
-    alert(`"${name}" listo para el Teambuilder.\nAbre teambuilder.html con el mismo Live Server.`);
+    if (typeof showToast === 'function') showToast('"' + name + '" listo para el Teambuilder', 'success'); else alert(name + ' listo');
   }
 
   document.getElementById('btn-send-my-to-team')?.addEventListener('click', () => sendToTeam('p1'));

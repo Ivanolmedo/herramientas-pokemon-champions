@@ -1,78 +1,133 @@
-/* Estilos adicionales para Herramientas Pokémon Champions */
+/* =========================================================
+   Herramientas Pokémon Champions — estilos compartidos
+   ========================================================= */
 
 /* Nav activo */
 .nav-link.active {
   background-color: rgba(255, 255, 255, 0.95);
-  color: #c2410c; /* orange-700 */
+  color: #c2410c;
 }
 
-/* Botones de Field */
-.field-btn.active {
-  background-color: #fff7ed; /* orange-50 */
-  border-color: #fdba74;     /* orange-300 */
-  color: #c2410c;            /* orange-700 */
+/* ---------- Field buttons ---------- */
+.field-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.field-btn:hover {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #c2410c;
+}
+.field-btn.active {
+  background: #f97316;
+  color: #fff;
+  border-color: #f97316;
+  box-shadow: 0 1px 2px rgba(249, 115, 22, 0.25);
+}
+.field-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  min-width: 4.5rem;
 }
 
-/* Inputs con focus más suave */
-input:focus, select:focus {
-  outline: none;
+/* ---------- Autocomplete ---------- */
+.autocomplete-list {
+  z-index: 60;
 }
-
-/* Scrollbar suave */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
+.autocomplete-item:hover,
+.autocomplete-item.bg-orange-100 {
   background: #fff7ed;
 }
-::-webkit-scrollbar-thumb {
-  background: #fdba74;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #fb923c;
-}
 
-/* Animación suave para slots del teambuilder */
+/* ---------- Toasts ---------- */
+.toast-root {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+  font-size: 0.875rem;
+  color: #334155;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.toast-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.toast-out {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.toast-icon {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+.toast-msg {
+  flex: 1;
+  line-height: 1.35;
+  white-space: pre-line;
+}
+.toast-close {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.15rem;
+}
+.toast-close:hover { color: #64748b; }
+
+.toast-success { border-color: #bbf7d0; background: #f0fdf4; }
+.toast-success .toast-icon { color: #16a34a; }
+.toast-info { border-color: #fed7aa; background: #fff7ed; }
+.toast-info .toast-icon { color: #ea580c; }
+.toast-warn { border-color: #fde68a; background: #fffbeb; }
+.toast-warn .toast-icon { color: #d97706; }
+.toast-error { border-color: #fecaca; background: #fef2f2; }
+.toast-error .toast-icon { color: #dc2626; }
+
+/* ---------- Misc ---------- */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+}
 .team-slot {
   transition: all 0.2s ease;
 }
-
-/* Placeholder más visible */
 ::placeholder {
   color: #94a3b8;
   opacity: 1;
 }
-
-/* Autocompletado */
-.autocomplete-wrapper {
-  position: relative;
-}
-
-.autocomplete-list {
-  position: absolute;
-  z-index: 50;
-  background: white;
-  border: 1px solid #fed7aa;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.1);
-  max-height: 260px;
-  overflow-y: auto;
-  width: 100%;
-  margin-top: 2px;
-}
-
-.autocomplete-item {
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: background 0.15s;
-}
-
-.autocomplete-item:hover,
-.autocomplete-item.active {
-  background-color: #fff7ed;
-  color: #c2410c;
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #fff7ed; }
+::-webkit-scrollbar-thumb { background: #fdba74; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #fb923c; }

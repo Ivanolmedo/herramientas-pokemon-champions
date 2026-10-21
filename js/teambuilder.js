@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!poke || !poke.sps) return;
     const total = Object.values(poke.sps).reduce((sum, v) => sum + (Number(v) || 0), 0);
     if (total > 66) {
-      alert(`⚠️ Slot ${slotIndex + 1} (${poke.species}) tiene ${total} Stat Points.\nEl máximo es 66.`);
+      if (typeof showToast==='function') showToast('Slot '+(slotIndex+1)+' ('+poke.species+'): '+total+' SP (máx. 66)', 'warn', 4000);
     }
   }
 
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     const species = document.getElementById('edit-species').value.trim();
     if (!species) {
-      alert('Debes indicar un Pokémon');
+      if (typeof showToast==='function') showToast('Debes indicar un Pokémon', 'warn');
       return;
     }
     const prevNotes = team[currentEditingSlot]?.notes || [];
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!text) return;
     const poke = team[currentEditingSlot];
     if (!poke) {
-      alert('Guarda primero un Pokémon en este slot.');
+      if (typeof showToast==='function') showToast('Guarda primero un Pokémon en este slot', 'warn');
       return;
     }
     ensureNotes(poke);
@@ -435,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
       absorbPendingNotes();
       renderTeamSlots();
       updateAllAnalysis();
-      alert(`"${poke.species}" añadido al Slot ${slot + 1}.`);
+      if (typeof showToast==='function') showToast('"'+poke.species+'" añadido al Slot '+(slot+1), 'success');
       return true;
     } catch (e) {
       console.error(e);
@@ -877,13 +877,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function saveCurrentTeam() {
     const active = team.filter(p => p && p.species);
-    if (!active.length) { alert('No hay ningún Pokémon en el equipo para guardar.'); return; }
+    if (!active.length) { if (typeof showToast==='function') showToast('No hay Pokémon para guardar', 'warn'); return; }
     const name = prompt('Nombre para este equipo:', 'Mi equipo');
     if (!name || !name.trim()) return;
     const saved = getSavedTeams();
     saved[name.trim()] = { team: JSON.parse(JSON.stringify(team)), date: new Date().toISOString() };
     setSavedTeams(saved);
-    alert(`Equipo "${name.trim()}" guardado (incluye notas).`);
+    if (typeof showToast==='function') showToast('Equipo "'+name.trim()+'" guardado', 'success');
   }
   function openLoadModal() {
     const modal = document.getElementById('load-modal');
@@ -937,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTeamSlots();
             updateAllAnalysis();
             closeLoadModal();
-            alert(`Equipo "${name}" cargado.`);
+            if (typeof showToast==='function') showToast('Equipo "'+name+'" cargado', 'success');
           }
         });
       });
@@ -981,7 +981,7 @@ document.addEventListener('DOMContentLoaded', () => {
       (poke.moves || []).forEach(m => { if (m) text += `- ${m}\n`; });
       text += '\n';
     });
-    navigator.clipboard.writeText(text.trim()).then(() => alert('Equipo exportado (formato Showdown, sin notas internas).'));
+    navigator.clipboard.writeText(text.trim()).then(() => { if (typeof showToast==='function') showToast('Equipo exportado al portapapeles', 'success'); });
   }
 
   function openImportModal() {
@@ -1072,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-import-from-calc')?.addEventListener('click', () => {
     const ok = checkTransferFromCalc();
     if (!ok && !localStorage.getItem('champions_transfer_poke')) {
-      alert('No hay ningún Pokémon pendiente. Envíalo primero desde la Calculadora (mismo Live Server).');
+      if (typeof showToast==='function') showToast('No hay Pokémon pendiente desde la Calculadora', 'warn');
     }
   });
   document.getElementById('btn-add-note')?.addEventListener('click', addManualNote);
